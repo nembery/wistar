@@ -263,6 +263,9 @@ def create_config_drive(domain_name, files=[]):
             logger.debug("seed.img already created!")
             return seed_img_name
 
+	logger.debug("Running config drive create command:")
+	logger.debug('qemu-img create -f raw %s 10M' % seed_img_name)
+
         if not os.system("qemu-img create -f raw  %s 16M" % seed_img_name) == 0:
             raise Exception("Could not create config-drive image")
 

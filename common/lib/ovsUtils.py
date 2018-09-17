@@ -18,7 +18,9 @@
 #
 
 import os
+import logging
 
+logger = logging.getLogger(__name__)
 
 def ovs_bridge_exists(bridge_name):
     """
@@ -39,13 +41,17 @@ def create_bridge(bridge_name):
     :param bridge_name: name of the bridge to create
     :return: boolean
     """
+    logger.debug('creating bridge')
+
     if not ovs_bridge_exists(bridge_name):
         rv = os.system("sudo ovs-vsctl add-br %s" % bridge_name)
         if rv == 0:
             # let's configure this bridge as well
             allow_bpdu(bridge_name)
+            logger.debug('success creating bridge')
             return True
         else:
+            logger.debug('failed creating bridge')
             return False
 
     else:
