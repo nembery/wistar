@@ -109,7 +109,7 @@
             </div>
             &nbsp;
             <a href="#" onclick="javascript: launchWebConsole('{{ d.name }}');"
-               title="Launch Console">
+               title="Launch Console ({{ vnc_port|default: 0000 }})">
                 <img src="{% static 'images/console.png' %}" width="20px" height="20px"/></a>
             &nbsp;
             {% endif %}
