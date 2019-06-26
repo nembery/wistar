@@ -14,7 +14,7 @@ RUN apt-get install -y build-essential libxml2-dev libxslt1-dev libz-dev libffi-
 RUN pip install cryptography junos-eznc jxmlease pyvbox
 RUN apt-get install -y qemu-kvm libvirt-bin socat python-pexpect python-libvirt \
     python-yaml unzip bridge-utils python-numpy genisoimage python-netaddr \
-    python-markupsafe python-setuptools mtools
+    python-markupsafe python-setuptools mtools dosfstools
 RUN pip install django==1.9.9
 RUN mkdir -p /opt/wistar/user_images/instances
 RUN mkdir -p /opt/wistar/media
