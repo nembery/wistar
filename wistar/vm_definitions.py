@@ -79,9 +79,14 @@ vm_image_types = [
         "description": "Junos vMX HDD",
         "js": "draw2d.shape.node.generic",
     },
-        {
+    {
         "name": "space",
         "description": "Junos Space",
         "js": "draw2d.shape.node.space",
+    },
+    {
+        "name": "panos",
+        "description": "PAN-OS VM-Series",
+        "js": "draw2d.shape.node.panos",
     }
 ]
