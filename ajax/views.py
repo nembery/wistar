@@ -65,12 +65,10 @@ def instance_details(request):
 
     try:
         domain_name = request.POST['domainName']
-        print 'got domain name of %s' % domain_name
         domain = libvirtUtils.get_domain_by_name(domain_name)
-        print ' got domain'
+        domain_details = libvirtUtils.get_domain_dict(domain_name)
         vnc_port = libvirtUtils.get_domain_vnc_port(domain)
-        print 'got vnc_port'
-        return render(request, 'ajax/instanceDetails.html', {'d': domain, 'vnc_port': vnc_port})
+        return render(request, 'ajax/instanceDetails.html', {'d': domain_details, 'vnc_port': vnc_port})
     except Exception as e:
         print e
         return render(request, 'ajax/ajaxError.html', {'error': e})
