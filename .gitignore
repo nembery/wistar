@@ -4,3 +4,5 @@ db.sqlite3
 configuration-backup.py
 configuration-golden.py
 docs/_build
+local.env
+.DS_Store
