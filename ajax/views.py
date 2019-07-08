@@ -273,9 +273,13 @@ def get_junos_startup_state(request):
     response_data["power"] = False
     response_data["network"] = False
 
+    if not configuration.check_vm_network_state:
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+
     required_fields = set(['name'])
     if not required_fields.issubset(request.POST):
-        return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})
+        logger.error('Invalid parameters in POST for get_junos_startup_state')
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
 
     name = request.POST['name']
 
@@ -308,9 +312,13 @@ def get_linux_startup_state(request):
     response_data["power"] = False
     response_data["network"] = False
 
+    if not configuration.check_vm_network_state:
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+
     required_fields = set(['name'])
     if not required_fields.issubset(request.POST):
-        return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})
+        logger.error('Invalid parameters in POST for get_linux_startup_state')
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
 
     name = request.POST['name']
     # always check network if possible regardless of deployment_backend

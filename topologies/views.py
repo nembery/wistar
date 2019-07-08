@@ -61,7 +61,8 @@ def edit(request):
     script_list = Script.objects.all().order_by('name')
     context = {'image_list': image_list, 'script_list': script_list,
                'management_subnet': configuration.management_subnet,
-               'management_prefix': configuration.management_prefix
+               'management_prefix': configuration.management_prefix,
+               'check_vm_network_state': configuration.check_vm_network_state
                }
     return render(request, 'topologies/edit.html', context)
 

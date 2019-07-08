@@ -104,3 +104,7 @@ seeds_dir = "/opt/wistar/seeds/"
 
 # keep vm_image_types in a separate file and just include them here
 vm_image_types = vm_definitions.vm_image_types
+
+# check vm boot status via network reachability
+# set to false if wistar running in docker container with VMs on same host
+check_vm_network_state = True

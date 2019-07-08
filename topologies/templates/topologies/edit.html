@@ -34,7 +34,6 @@
 <script type="text/javascript" src="{% static 'js/vm_types/ubuntu16.js' %}"></script>
 
 <script type="text/javascript" src="{% static 'js/vm_types/space.js' %}"></script>
-
 <script type="text/javascript" src="{% static 'js/vm_types/vmx.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/vm_types/vsrx.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/vm_types/vre.js' %}"></script>
@@ -48,6 +47,7 @@
 <script type="text/javascript" src="{% static 'js/vm_types/vqfxRe.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/vm_types/vqfxCosim.js' %}"></script>
 
+<script type="text/javascript" src="{% static 'js/vm_types/panos.js' %}"></script>
 
 <script type="text/javascript" src="{% static 'js/vm_types/cloud.js' %}"></script>
 
@@ -1876,9 +1876,11 @@
             loadTopology();
             {% if topo.id != 0 %}
                 refreshDeploymentStatus( {{ topo.id }} );
+                {% if check_vm_network_state %}
                 setTimeout(updateAllBootState, 1500);
                 // let's continue to check boot up state every 30 seconds
                 updateBootInterval = setInterval(updateAllBootState, 30000);
+                {% endif %}
             {% endif %}
         {% endif %}
     });
