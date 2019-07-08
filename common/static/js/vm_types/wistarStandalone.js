@@ -54,11 +54,11 @@ BootStateLocator = draw2d.layout.locator.Locator.extend({
 wistarLabel = draw2d.shape.basic.Label.extend({
     NAME: "wistarLabel",
     init: function(text) {
-        console.log('inity');
+        // console.log('inity');
         this._super(text);
     },
     onDoubleClick: function() {
-        console.log('CLICKY');
+        // console.log('CLICKY');
         this.getParent().onDoubleClick();
     }
 });

@@ -22,8 +22,8 @@ import logging
 import os
 import platform
 import re
-import socket
 import shutil
+import socket
 import subprocess
 
 from jinja2 import Environment
@@ -145,7 +145,6 @@ def create_thick_provision_instance(image, instance, resize):
 
 
 def convert_vmdk_to_qcow2(image_path, new_image_path):
-
     rv = os.system("qemu-img convert -f vmdk -O qcow2 %s %s" % (image_path, new_image_path))
 
     if rv == 0:
@@ -263,8 +262,8 @@ def create_config_drive(domain_name, files=[]):
             logger.debug("seed.img already created!")
             return seed_img_name
 
-	logger.debug("Running config drive create command:")
-	logger.debug('qemu-img create -f raw %s 10M' % seed_img_name)
+        logger.debug("Running config drive create command:")
+        logger.debug('qemu-img create -f raw %s 10M' % seed_img_name)
 
         if not os.system("qemu-img create -f raw  %s 16M" % seed_img_name) == 0:
             raise Exception("Could not create config-drive image")
@@ -529,9 +528,9 @@ def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, passw
         udf.close()
 
         rv = os.system(
-                'genisoimage -output {0} -volid cidata -joliet -rock {1}/user-data {2}/meta-data'.format(seed_img_name,
-                                                                                                         seed_dir,
-                                                                                                         seed_dir))
+            'genisoimage -output {0} -volid cidata -joliet -rock {1}/user-data {2}/meta-data'.format(seed_img_name,
+                                                                                                     seed_dir,
+                                                                                                     seed_dir))
         if rv != 0:
             logger.debug("Could not create iso image!")
             return None
