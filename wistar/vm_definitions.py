@@ -88,5 +88,10 @@ vm_image_types = [
         "name": "panos",
         "description": "PAN-OS VM-Series",
         "js": "draw2d.shape.node.panos",
+    },
+    {
+        "name": "panorama",
+        "description": "PAN-OS Panorama",
+        "js": "draw2d.shape.node.panorama",
     }
 ]
