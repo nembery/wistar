@@ -64,11 +64,15 @@ def instance_details(request):
         return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})
 
     try:
-        domain_name = request.POST['domainName']
-        domain = libvirtUtils.get_domain_by_name(domain_name)
-        domain_details = libvirtUtils.get_domain_dict(domain_name)
-        vnc_port = libvirtUtils.get_domain_vnc_port(domain)
-        return render(request, 'ajax/instanceDetails.html', {'d': domain_details, 'vnc_port': vnc_port})
+        if configuration.deployment_backend == "kvm":
+            domain_name = request.POST['domainName']
+            domain = libvirtUtils.get_domain_by_name(domain_name)
+            domain_details = libvirtUtils.get_domain_dict(domain_name)
+            vnc_port = libvirtUtils.get_domain_vnc_port(domain)
+            return render(request, 'ajax/instanceDetails.html', {'d': domain_details, 'vnc_port': vnc_port})
+        elif configuration.deployment_backend == "openstack":
+            return render(request, 'ajax/instanceDetails.html', {'d': {}, 'vnc_port': 6000})
+
     except Exception as e:
         print e
         return render(request, 'ajax/ajaxError.html', {'error': e})

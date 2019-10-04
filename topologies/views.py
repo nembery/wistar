@@ -227,7 +227,7 @@ def clone(request, topo_id):
 
 def multi_clone(request):
     logger.debug('---- topology mulit_clone ----')
-    required_fields = set(['clones', 'topoId'])
+    required_fields = {'clones', 'topoId'}
     if not required_fields.issubset(request.POST):
         logger.error('Invalid parameters in POST')
         return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})

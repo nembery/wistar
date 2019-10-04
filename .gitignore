@@ -3,6 +3,7 @@ db.sqlite3
 .idea
 configuration-backup.py
 configuration-golden.py
+configuration-local.py
 docs/_build
 local.env
 .DS_Store

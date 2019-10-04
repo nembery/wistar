@@ -1,6 +1,6 @@
 function setImageType() {
-    id = jQuery('#topoIconImageSelect').val().split(':')[0]
-    type = jQuery('#topoIconImageSelect').val().split(':')[1]
+    id = jQuery('#topoIconImageSelect').val().split(':')[0];
+    type = jQuery('#topoIconImageSelect').val().split(':')[1];
     console.log("Setting image to " + id + " and type to " + type);
     jQuery('#topoIconType').val(type);
     jQuery('#topoIconImage').val(id);
@@ -15,6 +15,9 @@ function setImageType() {
     jQuery('#topoIconScriptSelect').val(0);
     jQuery('#topoIconScriptParam').val(0);
     jQuery('#topoIconResize').val(0);
+    $('#newInstanceRoles').val('[]');
+    $('#instanceNewRole').val('');
+    $('#instanceRoles').empty();
 
     for (v = 0; v < vm_types.length; v++) {
         vm_type = vm_types[v];
@@ -66,16 +69,19 @@ function setImageType() {
 }
 
 function addIconAndClose() {
-    rv = addIcon();
-    if (rv == true) {
+    let rv = addIcon();
+    if (rv === true) {
         hideOverlay('#add_vm_form');
         hideOverlay('#overlayPanel');
     }
     // zero out all optional params as well, so they don't sneak in any other image types where they would
     // normally be hidden and zero anyway
-    jQuery('#topoIconScriptSelect').val(0);
-    jQuery('#topoIconScriptParam').val(0);
-    jQuery('#topoIconResize').val(0);
+    $('#topoIconScriptSelect').val(0);
+    $('#topoIconScriptParam').val(0);
+    $('#topoIconResize').val(0);
+    $('#newInstanceRoles').val('[]');
+    $('#instanceNewRole').val('');
+    $('#instanceRoles').empty();
 
 }
 
@@ -96,12 +102,14 @@ function addIcon() {
     var ram = jQuery('#topoIconRam').val();
     //var iconData = jQuery('#topoIconIcon').val();
 
-    if (image == 0) {
+    if (image === 0) {
         alert('Please select a valid image');
         return false;
     }
+
     var scriptId = jQuery('#topoIconScriptSelect').val();
     var scriptParam = jQuery('#topoIconScriptParam').val();
+    let roles = $('#newInstanceRoles').val();
 
     var resize = jQuery('#topoIconResize').val();
 
@@ -171,6 +179,13 @@ function addIcon() {
     if (scriptId != 0) {
         icon.setUserDataKey('configScriptId', scriptId);
         icon.setUserDataKey('configScriptParam', scriptParam);
+    }
+
+    if (roles !== '[]') {
+        icon.setUserDataKey('roles', JSON.parse(roles));
+        $('#newInstanceRoles').val('[]');
+        $('#instanceNewRole').val('');
+        $('#instanceRoles').empty();
     }
 
     if (icon.getSecondaryDiskParams() != "") {
@@ -355,7 +370,7 @@ function loadInstanceDetails() {
     var params = {
         'domainName': domainName
     };
-    var post = jQuery.post(url, params, function (response) {
+    let post = jQuery.post(url, params, function (response) {
         var content = jQuery(response);
         cso.append(content);
     });
@@ -365,4 +380,31 @@ function loadInstanceDetails() {
     post.always(function () {
         doc.css('cursor', '');
     });
+}
+
+function addNewInstanceRole() {
+    let instance_role = $('#instanceNewRole');
+    let r = instance_role.val();
+    if (r === '') {
+        console.log('no role to set');
+        return;
+    }
+    let instance_saved_roles = $('#newInstanceRoles');
+    let roles_string = instance_saved_roles.val();
+    let roles = JSON.parse(roles_string);
+
+    if (!$.isArray(roles)) {
+        roles = [];
+    }
+    roles.push(r);
+
+    instance_saved_roles.val(JSON.stringify(roles));
+
+    $('#instanceRoles').append("<li>" + r + "</li>");
+    instance_role.val('');
+}
+
+function clearNewInstanceRoles() {
+    $('#newInstanceRoles').val('[]');
+    $('#instanceRoles').empty();
 }
