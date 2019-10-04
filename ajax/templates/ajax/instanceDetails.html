@@ -48,7 +48,7 @@
         $('#instanceCpu').val(s.getCpu());
         $('#instanceRam').val(s.getRam());
 
-        var roles = s.getUserDataKey('roles');
+        let roles = s.getUserDataKey('roles');
         if ($.isArray(roles)) {
             $.each(roles, function(i, r)
             {

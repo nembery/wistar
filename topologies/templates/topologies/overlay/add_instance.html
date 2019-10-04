@@ -8,8 +8,8 @@
 <table>
     <tbody>
     <tr>
-        <td colspan="2" class="screen-overlay-menu">
-            <a href="#" onclick="javascript: hideOverlay('#overlayPanel')">X</a>
+        <td class="screen-overlay-menu" colspan="2">
+            <a href="#" onclick="hideOverlay('#overlayPanel')">X</a>
         </td>
     </tr>
     <tr>
@@ -22,12 +22,12 @@
             Authentication
         </td>
         <td>
-            <input type="text" size="15" maxsize="15" style="width: 75px;"
-                   name="topoIconUser" id="topoIconUser" value="root" title="Username"/>
+            <input id="topoIconUser" maxsize="15" name="topoIconUser" size="15"
+                   style="width: 75px;" title="Username" type="text" value="root"/>
             &nbsp;
-            <input type="text" size="15" maxsize="15" style="width: 75px;"
-                   name="topoIconPass" id="topoIconPass" value="{{ global_config.default_instance_password }}"
-                   onblur="javascript: checkPass(this.value);" title="Password"/>
+            <input id="topoIconPass" maxsize="15" name="topoIconPass" onblur="checkPass(this.value);"
+                   size="15" style="width: 75px;" title="Password"
+                   type="text" value="{{ global_config.default_instance_password }}"/>
         </td>
     </tr>
     <tr>
@@ -35,8 +35,8 @@
             Instance Name
         </td>
         <td>
-            <input type="text" size="15" maxlength="32" name="topoIconName" id="topoIconName" value=""
-                   onblur="javascript: clean_string_no_space(this);"/>
+            <input id="topoIconName" maxlength="32" name="topoIconName" onblur="clean_string_no_space(this);" size="15" type="text"
+                   value=""/>
         </td>
     </tr>
     <tr>
@@ -44,7 +44,7 @@
             Base Image
         </td>
         <td>
-            <select name="topoIconImageSelect" id="topoIconImageSelect" onchange="javascript: setImageType();">
+            <select id="topoIconImageSelect" name="topoIconImageSelect" onchange="setImageType();">
                 <option value="0">Choose Image</option>
                 <!-- not a better way to do this? -->
                 {% for i in image_list %}
@@ -61,20 +61,20 @@
         </td>
         <td>
             vCPU:
-            <select name="topoIconCpu" id="topoIconCpu">
+            <select id="topoIconCpu" name="topoIconCpu">
                 <option value="1">1</option>
-                <option value="2" selected>2</option>
+                <option selected value="2">2</option>
                 <option value="4">4</option>
                 <option value="6">6</option>
                 <option value="8">8</option>
                 <option value="10">10</option>
             </select>
             vRAM:
-            <select name="topoIconRam" id="topoIconRam">
+            <select id="topoIconRam" name="topoIconRam">
                 <option value="512">512</option>
                 <option value="768">768</option>
                 <option value="1024">1024</option>
-                <option value="2048" selected>2048</option>
+                <option selected value="2048">2048</option>
                 <option value="4096">4096</option>
                 <option value="8192">8192</option>
                 <option value="16384">16384</option>
@@ -90,11 +90,11 @@
             Thick Provision and resize with:
         </td>
         <td>
-            <input type="text" size="3" name="topoIconResize" id="topoIconResize" value="0"
-                   onblur="javascript: numeric_only(this);"
-                   style="width: 100px;"
+            <input id="topoIconResize" name="topoIconResize" onblur="numeric_only(this);" size="3" style="width: 100px;"
                    title="Will create a thick privisioned image and resize
-                                            with an additional amount of space"/> GB
+                                            with an additional amount of space"
+                   type="text"
+                   value="0"/> GB
         </td>
     </tr>
     </tbody>
@@ -104,7 +104,7 @@
             Cloud-Init Script
         </td>
         <td>
-            <select name="topoIconScriptSelect" id="topoIconScriptSelect">
+            <select id="topoIconScriptSelect" name="topoIconScriptSelect">
                 <option value="0">Default cloud-init script</option>
                 <!-- not a better way to do this? -->
                 {% for s in script_list %}
@@ -118,8 +118,26 @@
             Cloud-Init Param
         </td>
         <td>
-            <input type="text" size="15" name="topoIconScriptParam" id="topoIconScriptParam" value="0"
-                   onblur="javascript: clean_string_no_special(this);"/>
+            <input id="topoIconScriptParam" name="topoIconScriptParam"
+                   onblur="clean_string_no_special(this);" size="15" type="text"
+                   value="0"/>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Roles
+        </td>
+        <td>
+            <div style="line-height: 1.5;">
+                <ul id="instanceRoles" style="list-style-type: square; margin-bottom: 10px;"></ul>
+            </div>
+            Add Role:
+            <input id="instanceNewRole" style="width: 75px;"
+                   type="text"/>
+            <input onclick="addNewInstanceRole()" type="button" value="Add"/>
+            &nbsp;
+            <input onclick="clearNewInstanceRoles()" type="button" value="Clear"/>&nbsp;
+            <input id="newInstanceRoles" type="hidden" value="[]"/>
         </td>
     </tr>
     </tbody>
@@ -129,7 +147,7 @@
             Secondary Disk
         </td>
         <td>
-            <select name="topoIconSecondaryDisk" id="topoIconSecondaryDisk">
+            <select id="topoIconSecondaryDisk" name="topoIconSecondaryDisk">
             </select>
         </td>
     </tr>
@@ -140,8 +158,8 @@
             Virtual PFE
         </td>
         <td>
-            <select name="topoIconImageVFPCSelect" id="topoIconImageVFPCSelect"
-                    onchange="javascript: setCompanionParams(this)">
+            <select id="topoIconImageVFPCSelect" name="topoIconImageVFPCSelect"
+                    onchange="setCompanionParams(this)">
             </select>
         </td>
     </tr>
@@ -150,10 +168,10 @@
             vPFE vCPU
         </td>
         <td>
-            <select name="topoIconVFPCCpu" id="topoIconVFPCCpu">
+            <select id="topoIconVFPCCpu" name="topoIconVFPCCpu">
                 <option value="1">1</option>
                 <option value="2">2</option>
-                <option value="3" selected>3</option>
+                <option selected value="3">3</option>
                 <option value="4">4</option>
                 <option value="8">8</option>
             </select>
@@ -164,29 +182,29 @@
             vPFE vRAM
         </td>
         <td>
-            <select name="topoIconVFPCRam" id="topoIconVFPCRam">
+            <select id="topoIconVFPCRam" name="topoIconVFPCRam">
                 <option value="512">512</option>
                 <option value="768">768</option>
                 <option value="1024">1024</option>
                 <option value="2048">2048</option>
                 <option value="4096">4096</option>
                 <option value="6144">6144</option>
-                <option value="8192" selected>8192</option>
+                <option selected value="8192">8192</option>
                 <option value="16384">16384</option>
             </select> MB
-            <input type="hidden" id="topoIconVFPCJs" value=""/>
-            <input type="hidden" id="topoIconVFPCType" value=""/>
+            <input id="topoIconVFPCJs" type="hidden" value=""/>
+            <input id="topoIconVFPCType" type="hidden" value=""/>
         </td>
     </tr>
     </tbody>
     <tbody>
     <tr>
         <td colspan="2">
-            <input type="hidden" name="topoIconType" id="topoIconType" value=""/>
-            <input type="hidden" name="topoIconImage" id="topoIconImage" value=""/>
-            <input type="button" onclick="javascript: addIconAndClose();" value="Add and Close"/>
+            <input id="topoIconType" name="topoIconType" type="hidden" value=""/>
+            <input id="topoIconImage" name="topoIconImage" type="hidden" value=""/>
+            <input onclick="addIconAndClose();" type="button" value="Add and Close"/>
             &nbsp;
-            <input type="button" onclick="javascript: addIcon();" value="Add Another Instance"/>
+            <input onclick="addIcon();" type="button" value="Add Another Instance"/>
         </td>
     </tr>
     </tbody>
