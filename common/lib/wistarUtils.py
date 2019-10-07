@@ -263,7 +263,9 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
                                                           device['label'],
                                                           management_ip,
                                                           device['managementInterface'],
-                                                          device['password'])
+                                                          device['password'],
+                                                          device.get('configScriptParam', ''),
+                                                          device.get('roles', []))
 
             script_string = ""
             if "configScriptId" in device and device["configScriptId"] != 0:
@@ -449,6 +451,11 @@ def load_config_from_topology_json(topology_json, topology_id):
                 logger.debug("Found a configScript to use!")
                 device["configScriptId"] = user_data.get("configScriptId", "")
                 device["configScriptParam"] = user_data.get("configScriptParam", "")
+
+            # ensure we grab any defined roles on this device
+            if 'roles' in user_data:
+                logger.debug('Found roles to use')
+                device['roles'] = user_data.get('roles', [])
 
             device["uuid"] = json_object.get('id', '')
             device["interfaces"] = []

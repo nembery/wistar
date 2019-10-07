@@ -426,7 +426,8 @@ def get_junos_default_config_template(domain_name, host_name, password, ip, mana
         return None
 
 
-def get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, password, script_param=""):
+def get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, password, script_param="", roles=None):
+
     logger.debug('getting cloud-init-config')
     logger.debug(mgmt_ip)
     ip_network = IPNetwork(mgmt_ip)
@@ -442,6 +443,15 @@ def get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, passw
     config["mgmt_interface"] = mgmt_interface
     config["default_gateway"] = configuration.management_gateway
     config["ssh_key"] = configuration.ssh_key
+
+    # support roles from the UI
+    if roles is not None:
+        config['roles'] = roles
+
+    # allow extra config params from the configuration file
+    if hasattr(configuration, 'cloud_init_params') and type(configuration.cloud_init_params) is dict:
+        for k, v in configuration.cloud_init_params.items():
+            config[k] = v
 
     # do not allow 'root' user as the default ssh_user as this causes Junos configuration errors
     if configuration.ssh_user == 'root':
@@ -500,7 +510,11 @@ def render_cloud_init_meta_data(config):
     return meta_data_string
 
 
-def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, password, script="", script_param=""):
+def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, password, script="", script_param="",
+                          roles=None):
+    if roles is None:
+        roles = []
+
     try:
         seed_dir = configuration.seeds_dir + domain_name
         seed_img_name = seed_dir + "/seed.iso"
@@ -512,7 +526,7 @@ def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, passw
             logger.debug("seed.img already created!")
             return seed_img_name
 
-        config = get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, password, script_param)
+        config = get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, password, script_param, roles)
 
         user_data_string = render_cloud_init_user_data(config, script)
         meta_data_string = render_cloud_init_meta_data(config)

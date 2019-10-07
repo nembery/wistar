@@ -1102,6 +1102,10 @@ def inline_deploy_topology(config):
                 # domain_name, host_name, mgmt_ip, mgmt_interface
                 script_string = ""
                 script_param = ""
+                roles = list()
+
+                if 'roles' in device and type(device['roles']) is list:
+                    roles = device['roles']
 
                 if device["configScriptId"] != 0:
                     logger.debug("Passing script data!")
@@ -1117,7 +1121,7 @@ def inline_deploy_topology(config):
                 logger.debug("Creating cloud init path for linux image")
                 cloud_init_path = osUtils.create_cloud_init_img(device["name"], device["label"],
                                                                 management_ip, management_interface,
-                                                                device["password"], script_string, script_param)
+                                                                device["password"], script_string, script_param, roles)
 
                 logger.debug(cloud_init_path)
 
