@@ -2029,7 +2029,7 @@
                             <div id="linuxIconImage"></div>
                         </td>
                     </tr>
-
+                    {% if global_config.deployment_backend == 'kvm' %}
                     <tr>
                         <td>
                             Cloud-Init / CDROM
@@ -2038,6 +2038,7 @@
                             <input onclick="loadIsoManager();" type="button" value="Manage Attached ISO">
                         </td>
                     </tr>
+                    {% endif %}
                 </table>
             </div>
             <div id="genericIconEditor" style="display:none">
