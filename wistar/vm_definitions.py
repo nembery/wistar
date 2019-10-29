@@ -15,6 +15,11 @@ vm_image_types = [
         "js": "draw2d.shape.node.ubuntu16",
     },
     {
+        "name": "ubuntu18",
+        "description": "Ubuntu 18",
+        "js": "draw2d.shape.node.ubuntu18",
+    },
+    {
         "name": "junos_vmx",
         "description": "Junos vMX 14.x",
         "js": "draw2d.shape.node.vmx",
