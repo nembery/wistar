@@ -7,6 +7,19 @@ Tips and Tricks
 .. _ubuntu: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
 
 
+Running in Docker
+-----------------
+
+.. code-block::
+
+    docker run -v /var/run/libvirt:/var/run/libvirt -v /opt/wistar/user_images:/opt/wistar/user_images -v /opt/wistar/seeds:/opt/wistar/seeds -v $(pwd)/configuration-local.py:/opt/wistar/wistar/wistar/configuration.py -p 8080:80 --name wistar -d nembery/wistar:dev
+
+
+.. note::
+
+    You must first create the `/opt/wistar/user_images` and `/opt/wistar/seeds` directories on the libvirt host.
+
+
 Essential Images
 ----------------
 
