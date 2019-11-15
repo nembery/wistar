@@ -24,6 +24,7 @@ import os
 import re
 import subprocess
 import time
+from passlib.hash import md5_crypt
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -205,44 +206,61 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
             metadata["console"] = "vidconsole"
             dr["properties"]["metadata"] = metadata
 
-            # let's check all the configDriveParams and look for a junos config
-            # FIXME - this may need tweaked if we need to include config drive cloud-init support for other platforms
-            # right now we just need to ignore /boot/loader.conf
-            for cfp in device["configDriveParams"]:
+            if 'panos' == device['type']:
+                context = dict()
+                # type=static
+                # ip-address={{ config.mgmt_ip|replace("/24", "" }}
+                # default-gateway={{ config.mgmt_gateway }}
+                # netmask=255.255.255.0
+                # hostname={{ config.host_name }
+                context['mgmt_ip'] = device["ip"]
+                context['mgmt_gateway'] = configuration.management_gateway
+                context['mgmt_mask'] = configuration.management_mask
+                context['host_name'] = device["name"]
+                context['md5_password'] = md5_crypt.hash(device['password'])
+                # pull in all the extra cloud-init-params
+                for k, v in configuration.cloud_init_params.items():
+                    context[k] = v
 
-                if "destination" in cfp and cfp["destination"] == "/boot/loader.conf":
-                    logger.debug("Creating loader.conf config-drive entry")
-                    template_name = cfp["template"]
-                    loader_string = osUtils.compile_config_drive_params_template(template_name,
-                                                                                 device["name"],
-                                                                                 device["label"],
-                                                                                 device["password"],
-                                                                                 device["ip"],
-                                                                                 device["managementInterface"])
+                encoded_config_drive = osUtils.create_panos_cloud_init_b64(device['name'], context)
+                dr["properties"]["user_data"] = encoded_config_drive
+            else:
+                # let's check all the configDriveParams and look for a junos config
+                for cfp in device["configDriveParams"]:
 
-                    logger.debug('----------')
-                    logger.debug(loader_string)
-                    logger.debug('----------')
-                    for l in loader_string.split('\n'):
-                        if '=' in l:
-                            left, right = l.split('=')
-                            if left not in metadata and left != '':
-                                metadata[left] = right.replace('"', '')
+                    if "destination" in cfp and cfp["destination"] == "/boot/loader.conf":
+                        logger.debug("Creating loader.conf config-drive entry")
+                        template_name = cfp["template"]
+                        loader_string = osUtils.compile_config_drive_params_template(template_name,
+                                                                                     device["name"],
+                                                                                     device["label"],
+                                                                                     device["password"],
+                                                                                     device["ip"],
+                                                                                     device["managementInterface"])
 
-                if "destination" in cfp and cfp["destination"] == "/juniper.conf":
-                    logger.debug("Creating juniper.conf config-drive entry")
-                    template_name = cfp["template"]
-                    personality_string = osUtils.compile_config_drive_params_template(template_name,
-                                                                                      device["name"],
-                                                                                      device["label"],
-                                                                                      device["password"],
-                                                                                      device["ip"],
-                                                                                      device["managementInterface"])
+                        logger.debug('----------')
+                        logger.debug(loader_string)
+                        logger.debug('----------')
+                        for l in loader_string.split('\n'):
+                            if '=' in l:
+                                left, right = l.split('=')
+                                if left not in metadata and left != '':
+                                    metadata[left] = right.replace('"', '')
 
-                    dr["properties"]["personality"] = dict()
-                    dr["properties"]["personality"] = {"/config/juniper.conf": personality_string}
-                else:
-                    logger.debug('No juniper.conf found here ')
+                    if "destination" in cfp and cfp["destination"] == "/juniper.conf":
+                        logger.debug("Creating juniper.conf config-drive entry")
+                        template_name = cfp["template"]
+                        personality_string = osUtils.compile_config_drive_params_template(template_name,
+                                                                                          device["name"],
+                                                                                          device["label"],
+                                                                                          device["password"],
+                                                                                          device["ip"],
+                                                                                          device["managementInterface"])
+
+                        dr["properties"]["personality"] = dict()
+                        dr["properties"]["personality"] = {"/config/juniper.conf": personality_string}
+                    else:
+                        logger.debug('No juniper.conf found here ')
 
         if device['cloudInitSupport']:
             logger.debug('creating cloud-init script')

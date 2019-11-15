@@ -28,7 +28,7 @@ import subprocess
 
 from jinja2 import Environment
 from netaddr import *
-
+from base64 import b64encode
 from wistar import configuration
 from wistar import settings
 
@@ -508,6 +508,74 @@ def render_cloud_init_meta_data(config):
     meta_data_string = meta_data.render(config=config)
 
     return meta_data_string
+
+
+def __render_template(template_path, context):
+    this_path = os.path.abspath(os.path.dirname(__file__))
+    template_full_path = os.path.abspath(os.path.join(this_path, template_path))
+
+    env = Environment()
+    with open(template_full_path) as t:
+        ts = t.read()
+        td = env.from_string(ts)
+        tds = td.render(config=context)
+
+    return tds
+
+
+def create_panos_cloud_init_seed_dir(hostname, config):
+    try:
+        seed_dir = os.path.join(configuration.seeds_dir + hostname)
+        logger.debug('We are building a seed_dir')
+        logger.debug(seed_dir)
+        if not check_path(seed_dir):
+            os.mkdir(seed_dir)
+
+        for p in ('config', 'content', 'software', 'license'):
+            pd = os.path.join(seed_dir, p)
+            if not check_path(pd):
+                os.makedirs(pd)
+
+    except OSError as ose:
+        logger.error('Could not create panos cloud-init dir')
+        return None
+
+    try:
+        init_cfg_file = os.path.join(seed_dir, 'config', 'init-cfg.txt')
+        init_cfg_str = __render_template('../templates/panos_init_cfg.j2', config)
+        logger.debug('creating init_cfg_str')
+        with open(init_cfg_file, 'w+') as tmp_file:
+            tmp_file.write(init_cfg_str)
+
+        bootstrap_file = os.path.join(seed_dir, 'config', 'bootstrap.xml')
+        bootstrap_str = __render_template('../templates/panos_bootstrap.xml', config)
+        logger.debug('creating bootstrap')
+        with open(bootstrap_file, 'w+') as tmp_file:
+            tmp_file.write(bootstrap_str)
+
+        logger.debug('All good, returning seed_dir')
+        return seed_dir
+
+    except OSError:
+        logger.error('Could not write archive file into directory')
+        return None
+
+
+def create_panos_cloud_init_b64(hostname, config):
+
+    logger.debug('Creating PANOS cloud init b64')
+    seed_dir = create_panos_cloud_init_seed_dir(hostname, config)
+    if seed_dir is None:
+        raise Exception(
+            'This is not good!'
+        )
+
+    tar_file_name = '/tmp/' + hostname
+    tar_file = shutil.make_archive(tar_file_name, 'gztar', seed_dir)
+
+    with open(tar_file, 'rb') as tfb:
+        tar_contents = tfb.read()
+        return str(b64encode(tar_contents))
 
 
 def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, password, script="", script_param="",

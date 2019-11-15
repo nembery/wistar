@@ -1,5 +1,5 @@
 type=static
-ip-address={{ config.mgmt_ip|replace("/24", "" }}
+ip-address={{ config.mgmt_ip|replace("/24", "") }}
 default-gateway={{ config.mgmt_gateway }}
 netmask=255.255.255.0
 hostname={{ config.host_name }}

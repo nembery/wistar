@@ -108,3 +108,8 @@ vm_image_types = vm_definitions.vm_image_types
 # check vm boot status via network reachability
 # set to false if wistar running in docker container with VMs on same host
 check_vm_network_state = True
+
+# extra configuration parameters to pass into cloud-init scripts
+cloud_init_params = {
+    'salt_master': '10.10.10.10'
+}

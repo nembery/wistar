@@ -45,7 +45,7 @@ draw2d.shape.node.externalCloud = draw2d.shape.icon.Cloud2.extend({
         l.setColor("#000");
         l.setFontColor("#000");
         l.setStroke(0);
-        this.add(l, new externalCloudLabelLocator(this), 1);
+        this.add(l, new BottomCenterLocator(this), 1);
     },
     getLabel: function() {
         return this.getUserData()["label"]

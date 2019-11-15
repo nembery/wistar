@@ -66,7 +66,7 @@
         var doc = jQuery(document.documentElement);
         doc.css('cursor', 'progress');
        
-        if (action == "stop") {
+        if (action === "stop") {
             if (typeof s != 'undefined') {
                 s.setBootState("down");
             }
@@ -75,7 +75,7 @@
                 doc.css('cursor', '');
                 return false;
             }
-        } else if (action == "undefine") {
+        } else if (action === "undefine") {
             if (typeof s != 'undefined') {
                 s.setBootState("down");
             }
@@ -83,7 +83,7 @@
                 doc.css('cursor', '');
                 return false;
             }
-        } else if (action == "suspend") {
+        } else if (action === "suspend") {
             if (! confirm("This will suspend this domain! THIS IS EXPERIMENTAL!")) {
                 doc.css('cursor', '');
                 return false;
