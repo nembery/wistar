@@ -38,7 +38,7 @@ from common.lib import openstackUtils
 from common.lib import osUtils
 from common.lib import ovsUtils
 from common.lib import wistarUtils
-from common.lib.WistarException import WistarException
+from common.lib.exceptions import WistarException
 from images.models import Image
 from scripts.models import ConfigTemplate
 from scripts.models import Script
@@ -1109,19 +1109,22 @@ def inline_deploy_topology(config):
 
                 if device["configScriptId"] != 0:
                     logger.debug("Passing script data!")
-                    try:
-                        script = Script.objects.get(pk=int(device["configScriptId"]))
-                        script_string = script.script
-                        script_param = device["configScriptParam"]
-                        logger.debug(script_string)
-                        logger.debug(script_param)
-                    except ObjectDoesNotExist:
-                        logger.info('config script was specified but was not found!')
+                    # try:
+                    #     script = Script.objects.get(pk=int(device["configScriptId"]))
+                    #     script_string = script.script
+                    #     script_param = device["configScriptParam"]
+                    #     logger.debug(script_string)
+                    #     logger.debug(script_param)
+                    # except ObjectDoesNotExist:
+                    #     logger.info('config script was specified but was not found!')
+
+                    script = osUtils.get_cloud_init_template(device['configScriptId'])
+                    script_param = device["configScriptParam"]
 
                 logger.debug("Creating cloud init path for linux image")
                 cloud_init_path = osUtils.create_cloud_init_img(device["name"], device["label"],
                                                                 management_ip, management_interface,
-                                                                device["password"], script_string, script_param, roles)
+                                                                device["password"], script, script_param, roles)
 
                 logger.debug(cloud_init_path)
 

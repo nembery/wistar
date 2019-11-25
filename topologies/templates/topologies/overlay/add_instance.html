@@ -105,10 +105,9 @@
         </td>
         <td>
             <select id="topoIconScriptSelect" name="topoIconScriptSelect">
-                <option value="0">Default cloud-init script</option>
                 <!-- not a better way to do this? -->
-                {% for s in script_list %}
-                <option value="{{ s.id }}">{{ s.name }}</option>
+                {% for s in cloud_init_templates %}
+                <option value="{{ s }}">{{ s }}</option>
                 {% endfor %}
             </select>
         </td>

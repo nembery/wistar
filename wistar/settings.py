@@ -105,25 +105,23 @@ STATICFILES_DIRS = (
 
 STATIC_ROOT = BASE_DIR + '/static'
 
-# setup log file at /var/log/wistar.log
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {
+        'console': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/wistar.log',
+            'class': 'logging.StreamHandler'
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'level': 'WARN',
             'propagate': True,
         },
         '': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
         },
     },

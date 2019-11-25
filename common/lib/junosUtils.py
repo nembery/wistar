@@ -25,7 +25,7 @@ from jnpr.junos.exception import *
 from jnpr.junos.utils.config import Config
 from lxml import etree
 
-from WistarException import WistarException
+from exceptions import WistarException
 
 logger = logging.getLogger(__name__)
 

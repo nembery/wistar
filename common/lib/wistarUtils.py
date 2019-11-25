@@ -20,6 +20,7 @@
 import json
 import logging
 import math
+import netaddr
 import os
 import re
 import subprocess
@@ -33,10 +34,10 @@ import libvirtUtils
 import openstackUtils
 import osUtils
 from images.models import Image
-from scripts.models import Script
 from topologies.models import Topology
 from wistar import configuration
 from wistar import settings
+from exceptions import WistarException
 
 logger = logging.getLogger(__name__)
 # keep track of how many mac's we've used
@@ -125,8 +126,8 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
         nrs["type"] = "OS::Neutron::Subnet"
         #
         p = dict()
-        p["cidr"] = "1.1.1.0/24"
-        p["enable_dhcp"] = False
+        p["cidr"] = network['cidr']
+        p["enable_dhcp"] = True
         p["gateway_ip"] = ""
         p["name"] = network["name"] + "_subnet"
         if network["name"] == "virbr0":
@@ -289,8 +290,8 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
             if "configScriptId" in device and device["configScriptId"] != 0:
                 logger.debug("Passing script data!")
                 try:
-                    script = Script.objects.get(pk=int(device["configScriptId"]))
-                    script_string = script.script
+                    # script = Script.objects.get(pk=int(device["configScriptId"]))
+                    script_string = osUtils.get_cloud_init_template(device["configScriptId"])
                     device_config["script_param"] = device.get("configScriptParam", '')
                     logger.debug(script_string)
                 except ObjectDoesNotExist:
@@ -323,6 +324,9 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
                 p["network_id"] = {"get_resource": port["bridge"]}
                 # disable port security on all other ports (in case this isn't set globally)
                 p['port_security_enabled'] = False
+                if 'ip_address' in port:
+                    p['fixed_ips'] = list()
+                    p['fixed_ips'].append({'ip_address': port['ip_address']})
 
             pr["properties"] = p
             template["resources"][device["name"] + "_port" + str(index)] = pr
@@ -612,34 +616,55 @@ def load_config_from_topology_json(topology_json, topology_id):
             # should we create a new bridge for this connection?
             create_bridge = True
 
-            bridge_name = "t" + str(topology_id) + "_br" + str(conn_index)
+            if target_uuid in internal_bridges:
+                bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(target_uuid))
+            elif source_uuid in internal_bridges:
+                bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(source_uuid))
+            elif target_uuid in external_bridges.keys():
+                bridge_name = external_bridges[target_uuid]
+                create_bridge = False
+            elif source_uuid in external_bridges.keys():
+                bridge_name = external_bridges[target_uuid]
+                create_bridge = False
+            else:
+                bridge_name = "t" + str(topology_id) + "_br" + str(conn_index)
+
+            connection_user_data = json_object.get('userData', {})
+
+            if 'sourceIp' not in connection_user_data and 'targetIp' not in connection_user_data:
+                connection_cidr = __get_cidr_for_bridge(bridge_name, networks)
+                ips = __get_ips_for_bridge(bridge_name, networks)
+                source_ip = __get_next_ip_from_cidr(connection_cidr, ips)
+                ips.append(source_ip)
+                target_ip = __get_next_ip_from_cidr(connection_cidr, ips)
+                ips.append(target_ip)
+
+            else:
+                source_ip = connection_user_data['sourceIp']
+                target_ip = connection_user_data['targetIp']
+                connection_cidr = netaddr.IPNetwork(source_ip).cidr
+                ips = [source_ip, target_ip]
 
             for d in devices:
                 if d["uuid"] == source_uuid:
                     # slot should always start with 6 (or 5 for vmx phase 2/3)
-                    slot = "%#04x" % int(len(d["interfaces"]) + device["slot_offset"])
+                    slot = "%#04x" % int(len(d["interfaces"]) + d["slot_offset"])
                     interface = dict()
                     interface["mac"] = generate_next_mac(topology_id)
                     # does this bridge already exist? Possibly external bridge for example
                     # essentially same of create_bridge flag, but kept on the interface for later use in heat template
                     interface["bridge_preexists"] = False
-
-                    if target_uuid in internal_bridges:
-                        bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(target_uuid))
-                        interface["bridge"] = bridge_name
-                    elif target_uuid in external_bridges.keys():
-                        bridge_name = external_bridges[target_uuid]
-                        interface["bridge"] = bridge_name
+                    interface['ip_address'] = source_ip
+                    if target_uuid in external_bridges.keys():
                         # do not create external bridges...
                         create_bridge = False
                         interface["bridge_preexists"] = True
-                    else:
-                        interface["bridge"] = bridge_name
 
+                    interface["bridge"] = bridge_name
                     interface["slot"] = slot
-                    interface["name"] = device["interfacePrefix"] + str(len(d["interfaces"]))
+                    interface["name"] = d["interfacePrefix"] + str(len(d["interfaces"]))
                     interface["linkId"] = json_object["id"]
-                    interface["type"] = device["interfaceType"]
+                    interface["type"] = d["interfaceType"]
                     d["interfaces"].append(interface)
 
                     # do we need to mirror interfaces up to the parent VM?
@@ -662,19 +687,14 @@ def load_config_from_topology_json(topology_json, topology_id):
                     interface = dict()
                     interface["mac"] = generate_next_mac(topology_id)
                     interface["bridge_preexists"] = False
+                    interface["ip_address"] = target_ip
 
-                    if source_uuid in internal_bridges:
-                        bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(source_uuid))
-                        interface["bridge"] = bridge_name
                     if source_uuid in external_bridges.keys():
-                        bridge_name = external_bridges[source_uuid]
-                        interface["bridge"] = bridge_name
                         create_bridge = False
                         # keep bridge existence information on the interface for use in heat template
                         interface["bridge_preexists"] = True
-                    else:
-                        interface["bridge"] = bridge_name
 
+                    interface["bridge"] = bridge_name
                     interface["slot"] = slot
                     interface["name"] = device["interfacePrefix"] + str(len(d["interfaces"]))
                     interface["linkId"] = json_object["id"]
@@ -707,11 +727,17 @@ def load_config_from_topology_json(topology_json, topology_id):
                 connection = dict()
                 connection["name"] = bridge_name
                 connection["mac"] = generate_next_mac(topology_id)
+                connection['cidr'] = str(connection_cidr)
+                connection['ips'] = ips
+                logger.debug(
+                    'APPENDING'
+                )
                 networks.append(connection)
                 conn_index += 1
 
     # now let's add a management interface if it's required
     # if index == -1, then the desire is to put it last!
+    logger.debug('CHECK -1 mgmt indexes')
     for d in devices:
         if d["mgmtInterfaceIndex"] == -1:
             mi = dict()
@@ -725,6 +751,7 @@ def load_config_from_topology_json(topology_json, topology_id):
 
             mi["slot"] = "%#04x" % int(len(d["interfaces"]) + d["slot_offset"])
             mi["bridge"] = "virbr0"
+            # fixme - user_data isn't accessible here ?
             mi["type"] = user_data.get("mgmtInterfaceType", "virtio")
             mi["bridge_preexists"] = True
             d["interfaces"].append(mi)
@@ -733,6 +760,68 @@ def load_config_from_topology_json(topology_json, topology_id):
     topology_config["networks"] = networks
     topology_config["devices"] = devices
     return topology_config
+
+
+def __get_ips_for_bridge(bridge_name, networks):
+    for n in networks:
+        name = n['name']
+        if bridge_name == name:
+            if 'ips' in n:
+                return n['ips']
+
+    return list()
+
+
+def __get_cidr_for_bridge(bridge_name, networks):
+    """
+    Search the networks list to find the network with this name
+    and return it's configured cidr, if not found or a cidr is not configured, return a new unique cidr
+    from the 'private_cidr' configuration option
+    :param bridge_name:
+    :param networks:
+    :return:
+    """
+    for n in networks:
+        name = n['name']
+        if bridge_name == name:
+            if 'cidr' in n:
+                return netaddr.IPNetwork(n['cidr'])
+
+    return __get_new_cidr(networks)
+
+
+def __get_next_ip_from_cidr(ip_network, used_ips):
+    for iph in ip_network.iter_hosts():
+        ip = str(iph)
+        if ip not in used_ips:
+            return ip
+
+
+def __get_new_cidr(networks):
+
+    if hasattr(configuration, 'private_cidr'):
+        private_cidr = configuration.private_cidr
+    else:
+        private_cidr = '172.31.0.0/16'
+
+    if hasattr(configuration, 'private_subnet_mask'):
+        private_subnet = configuration.private_subnet_mask
+    else:
+        private_subnet = 27
+
+    private_network = netaddr.IPNetwork(private_cidr)
+
+    if networks is None or len(networks) == 0:
+        # return list(private_network.subnet(private_subnet))[0]
+        return next(private_network.subnet(private_subnet))
+
+    for s in private_network.subnet(private_subnet):
+        for n in networks:
+            cidr = n.get('cidr', '')
+            if cidr != str(s):
+                return s
+
+    raise WistarException('Could not locate a new private network cidr!')
 
 
 def clone_topology(topology_json):
@@ -782,10 +871,11 @@ def clone_topology(topology_json):
 
                 # do not import configuration script information if the id does not exist here
                 # for non-local clone operations, this could pose a problem
-                if "configScriptId" in ud:
-                    if not Script.objects.filter(id=ud['configScriptId']).exists():
-                        logger.info('Could not find desired script during clone')
-                        json_object['userData']['configScriptId'] = 0
+                # do not do this any longer as we just store the template name now nembery - 11-23-19
+                # if "configScriptId" in ud:
+                #     if not Script.objects.filter(id=ud['configScriptId']).exists():
+                #         logger.info('Could not find desired script during clone')
+                #         json_object['userData']['configScriptId'] = 0
 
         return json.dumps(json_data)
 

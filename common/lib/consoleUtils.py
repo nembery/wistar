@@ -24,7 +24,7 @@ import os
 import openstackUtils
 from wistar import configuration
 
-from WistarException import WistarException
+from exceptions import WistarException
 
 # simple utility lib to use virsh console to set up a device before 
 # networking is available

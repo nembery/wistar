@@ -98,9 +98,19 @@ vnc_start_port = 6000
 management_subnet = '192.168.122.0/24'
 management_prefix = '192.168.122.'
 management_gateway = '192.168.122.1'
+management_mask = '255.255.255.0'
 
 # wistar cloud init seeds director / temp directory
 seeds_dir = "/opt/wistar/seeds/"
+
+#  scripts directory for cloud_init scripts
+scripts_dir = "/opt/wistar/scripts/"
+
+# cidr from which to pull private ip networks
+private_cidr = '172.31.0.0/16'
+
+# mask to use for private ip networks
+private_subnet_mask = 27
 
 # keep vm_image_types in a separate file and just include them here
 vm_image_types = vm_definitions.vm_image_types

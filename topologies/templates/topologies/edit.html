@@ -817,36 +817,6 @@
         location.reload();
     }
 
-    function syncLinkData() {
-
-        if (!confirm("Are you sure you want to send this information to the VMs?")) {
-            return false;
-        }
-
-        // connection should have just been saved.
-        // export from the canvas again
-        exportJson();
-
-        var params = {
-            'sourceIp': jQuery('#connectionSourceIp').val(),
-            'sourceType': jQuery('#connectionSourceType').val(),
-            'sourceIface': jQuery('#connectionSourceIface').val(),
-            'targetIp': jQuery('#connectionTargetIp').val(),
-            'targetType': jQuery('#connectionTargetType').val(),
-            'targetIface': jQuery('#connectionTargetIface').val(),
-            'sourcePortIp': jQuery('#connectionSourcePortIp').val(),
-            'targetPortIp': jQuery('#connectionTargetPortIp').val(),
-            'sourcePw': jQuery('#connectionSourcePw').val(),
-            'targetPw': jQuery('#connectionTargetPw').val(),
-            'json': jQuery("#json").val(),
-            'topologyId': "{{ topo.id }}"
-        };
-        var url = "/ajax/syncLinkData/";
-        var successMessage = "Successfully pushed IP addresses to VMs";
-
-        simpleAjaxRequest(url, params, successMessage);
-    }
-
     function incrementDestIP() {
         // called on the onblur event of the connection Source Port IP field
         // this will automatically increment the ip address entered into the source
@@ -1184,7 +1154,7 @@
     }
 
     function hideAllEditors() {
-        manuallyTogglePanel('jsonDebug', 'none');
+        // manuallyTogglePanel('jsonDebug', 'none');
         manuallyTogglePanel('junosIconEditor', 'none');
         manuallyTogglePanel('linuxIconEditor', 'none');
         manuallyTogglePanel('genericIconEditor', 'none');
@@ -1199,17 +1169,11 @@
     }
 
     function showDebug() {
-        if (currentSelection == "debug") {
-            manuallyTogglePanel('jsonDebug', 'none');
-            currentSelection = "";
-        } else {
-            hideAllEditors();
-            manuallyTogglePanel('jsonDebug', '');
-            currentSelection = "debug";
-            exportJson();
-            jQuery('#debug').val("");
-            jQuery('#debug').val(jQuery('#json').val());
-        }
+        currentSelection = "debug";
+        exportJson();
+        jQuery('#debug').val("");
+        jQuery('#debug').val(jQuery('#json').val());
+        showOverlay('#jsonDebug');
     }
 
     function showConfigSetEditor() {
@@ -1804,24 +1768,6 @@
         sf.css("display", "none");
     }
 
-    function addInstanceForm() {
-        var doc = jQuery(document.documentElement);
-        doc.css('cursor', 'progress');
-
-        var url = '/topologies/addInstanceForm/';
-
-        var post = jQuery.get(url, function (response) {
-            var content = jQuery(response);
-            jQuery('#overlayPanel').empty().append(content);
-            showOverlay('#overlayPanel');
-        });
-        post.fail(function () {
-            alert('Could not perform request!');
-        });
-        post.always(function () {
-            doc.css('cursor', '');
-        });
-    }
 
     function resize_draw2d_canvas_view() {
         var canvas_view = jQuery('#draw2d_canvas_view');
@@ -2454,30 +2400,6 @@
                             <input id="connectionTargetPortIp" onblur="saveConnectionData();" type="text">
                         </td>
                     </tr>
-                    <tr>
-                        <td colspan="2">
-                            <input onclick="syncLinkData();" title="Push IP information to devices for this connection" type="button"
-                                   value="Sync IP Addresses">
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div id="jsonDebug" style="display: none;">
-                <table>
-                    <th>
-                        Debug Panel
-                    </th>
-                    <tr>
-                        <td>
-                            <textarea cols="1" id="debug" rows="5"></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input onclick="updateDebug();" title="Manually modify JSON object" type="button"
-                                   value="Update JSON">
-                        </td>
-                    </tr>
                 </table>
             </div>
             <div id="deploymentStatus" style="max-height: 455px; overflow-y: auto"></div>
@@ -2572,6 +2494,31 @@
         </td>
     </tr>
 </table>
+<div id="jsonDebug" style="display: none;">
+    <table>
+        <tr>
+            <td>
+                <div class="screen-overlay-menu" style="float: right">
+                    <a href="#" onclick="hideOverlay('#jsonDebug')">X</a>
+                </div>
+            <h2>
+                Debug Panel
+            </h2>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <textarea id="debug" rows="20"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input onclick="updateDebug();" title="Manually modify JSON object" type="button"
+                       value="Update JSON">
+            </td>
+        </tr>
+    </table>
+</div>
 <div id="overlayPanel" style="display: none;">
     <table>
         <tr>

@@ -45,6 +45,7 @@ from topologies.models import ConfigSet
 from topologies.models import Topology
 from wistar import configuration
 
+import traceback
 logger = logging.getLogger(__name__)
 
 
@@ -337,6 +338,7 @@ def create(request):
             topo.name = request.POST['name']
             topo.description = request.POST['description']
             topo.save()
+            url += str(topo_id)
         else:
             json_string = request.POST['json']
             description = request.POST['description']
@@ -472,7 +474,10 @@ def export_as_heat_template(request, topology_id):
     except Exception as e:
         logger.debug("Caught Exception in deploy heat")
         logger.error('exception: %s' % e)
-        return render(request, 'error.html', {'error': str(e)})
+        err = traceback.format_exc()
+        logger.debug(err)
+        logger.debug(e)
+        return render(request, 'error.html', {'error': str(err)})
 
 
 @csrf_exempt
@@ -481,6 +486,9 @@ def add_instance_form(request):
 
     image_list = Image.objects.all().order_by('name')
     script_list = Script.objects.all().order_by('name')
+    cloud_init_templates = osUtils.get_cloud_init_templates()
+    print 'using cloud init scripts'
+    print cloud_init_templates
     vm_types = configuration.vm_image_types
     vm_types_string = json.dumps(vm_types)
 
@@ -496,6 +504,7 @@ def add_instance_form(request):
 
     context = {'image_list': image_list,
                'script_list': script_list,
+               'cloud_init_templates': cloud_init_templates,
                'vm_types': vm_types_string,
                'image_list_json': image_list_json,
                'external_bridge': external_bridge,

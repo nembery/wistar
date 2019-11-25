@@ -31,6 +31,7 @@ from netaddr import *
 from base64 import b64encode
 from wistar import configuration
 from wistar import settings
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -622,6 +623,40 @@ def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, passw
     except Exception as e:
         logger.debug("Caught exception in create_cloud_init_img " + str(e))
         return None
+
+
+def get_cloud_init_templates():
+
+    if hasattr(configuration, 'scripts_dir'):
+        scripts_dir = configuration.scripts_dir
+    else:
+        scripts_dir = '/opt/wistar/scripts'
+
+    templates = list()
+    p = Path(scripts_dir)
+    for f in p.glob('*.j2'):
+        templates.append(f.name)
+
+    return templates
+
+
+def get_cloud_init_template(name):
+    if hasattr(configuration, 'scripts_dir'):
+        scripts_dir = configuration.scripts_dir
+    else:
+        scripts_dir = '/opt/wistar/scripts'
+
+    try:
+        f = Path(scripts_dir).joinpath(name)
+        if f.exists():
+            with f.open('r') as fo:
+                return fo.read()
+        else:
+            logger.error('Could not load script with that name!')
+            return ''
+    except OSError as ose:
+        logger.error('Could not read cloud init template %s' % name)
+        return ''
 
 
 def remove_cloud_init_tmp_dirs(topology_prefix):

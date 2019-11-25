@@ -94,37 +94,11 @@
                     );
                 </script>
             </li>
-            <li id="menu_scripts">
-                Templates
-                &nbsp;
-                <ul class="header_submenu">
-                    <li>
-                        <a href="/scripts">View Templates</a>
-                    </li>
-                    <li>
-                        <a href="/scripts/new">Create Template</a>
-                    </li>
-                    <li>
-                        <a href="/scripts/newScript">Create Script</a>
-                    </li>
-                </ul>
-                <script>
-                    jQuery("#menu_scripts").hover(
-                        function() {
-                            $(this).children('.header_submenu').slideDown(150);
-                        },
-                        function() {
-                            $(this).children('.header_submenu').slideUp(150);
-                        }
-                    );
-                </script>
-            </li>
-        </tr>
     </ul>
 </div>
 <div id="content">
     {% block content %}{% endblock %}
 </div>
-<div style="text-align: center">Version: 201805070900<br/><br/></div>
+<div style="text-align: center">Version: 20191125080000<br/><br/></div>
 </body>
 </html>

@@ -12,7 +12,7 @@ function setImageType() {
     jQuery('#addInstanceTbodySecondaryDisk').css("display", "none");
 
     // let's also zero out a couple of optional params
-    jQuery('#topoIconScriptSelect').val(0);
+    jQuery('#topoIconScriptSelect').val('default_cloud_init.j2');
     jQuery('#topoIconScriptParam').val(0);
     jQuery('#topoIconResize').val(0);
     $('#newInstanceRoles').val('[]');
@@ -108,6 +108,9 @@ function addIcon() {
     }
 
     var scriptId = jQuery('#topoIconScriptSelect').val();
+    if (scriptId === null) {
+        scriptId = '';
+    }
     var scriptParam = jQuery('#topoIconScriptParam').val();
     let roles = $('#newInstanceRoles').val();
 
@@ -116,14 +119,15 @@ function addIcon() {
     var vpfe_image = jQuery('#topoIconImageVFPCSelect').val();
 
     // enforce names always end with a digit
-    var last = name.substr(-1);
-    var lastInt = parseInt(last);
-    if (isNaN(lastInt)) {
-        alert('Name must end in a digit');
-        jQuery('#topoIconName').val(name + "1");
-        jQuery('#topoIconName').focus();
-        return false;
-    }
+    // 11-23-19 - remove this!
+    // var last = name.substr(-1);
+    // var lastInt = parseInt(last);
+    // if (isNaN(lastInt)) {
+    //     alert('Name must end in a digit');
+    //     jQuery('#topoIconName').val(name + "1");
+    //     jQuery('#topoIconName').focus();
+    //     return false;
+    // }
 
     if (name == "") {
         alert("Please add a valid instance name");
@@ -260,6 +264,11 @@ var dhcp_floor = ip_floor;
 function incrementIconName(name) {
     var last = name.substr(-1);
     var lastInt = parseInt(last);
+
+    if (isNaN(lastInt)) {
+        return name + '-01';
+    }
+
     if (last == "9") {
         var lastTwo = name.substr(-2);
         var lastTwoInt = parseInt(lastTwo);
@@ -408,3 +417,22 @@ function clearNewInstanceRoles() {
     $('#newInstanceRoles').val('[]');
     $('#instanceRoles').empty();
 }
+
+    function addInstanceForm() {
+        var doc = jQuery(document.documentElement);
+        doc.css('cursor', 'progress');
+
+        var url = '/topologies/addInstanceForm/';
+
+        var post = jQuery.get(url, function (response) {
+            var content = jQuery(response);
+            jQuery('#overlayPanel').empty().append(content);
+            showOverlay('#overlayPanel');
+        });
+        post.fail(function () {
+            alert('Could not perform request!');
+        });
+        post.always(function () {
+            doc.css('cursor', '');
+        });
+    }

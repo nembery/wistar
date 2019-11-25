@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y build-essential libxml2-dev libxslt1-de
     libssl-dev python-dev git python-pip qemu-kvm libvirt-bin socat python-pexpect python-libvirt \
     python-yaml unzip bridge-utils python-numpy genisoimage python-netaddr \
     python-markupsafe python-setuptools mtools dosfstools
-RUN pip install cryptography junos-eznc jxmlease pyvbox django==1.9.9 passlib
+RUN pip install cryptography junos-eznc jxmlease pyvbox pathlib django==1.9.9 passlib
 RUN mkdir -p /opt/wistar/user_images/instances && mkdir -p /opt/wistar/media && mkdir -p /opt/wistar/seeds
 
 WORKDIR /opt/wistar

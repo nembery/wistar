@@ -23,7 +23,7 @@ import re
 import paramiko
 from paramiko.ssh_exception import SSHException
 
-from common.lib.WistarException import WistarException
+from common.lib.exceptions import WistarException
 
 logger = logging.getLogger(__name__)
 
