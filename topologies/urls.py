@@ -30,7 +30,6 @@ urlpatterns = [
     url(r'^import/$', views.import_topology, name='importTopology'),
     url(r'^error/$', views.error, name='error'),
     url(r'^clone/(?P<topo_id>\d+)/$', views.clone, name='clone'),
-    url(r'^createConfigSet/$', views.create_config_set, name='createConfigSet'),
     url(r'^delete/(?P<topology_id>\d+)/$', views.delete, name='delete'),
     url(r'^(?P<topo_id>\d+)/$', views.detail, name='detail'),
     url(r'^launch/(?P<topology_id>\d+)$', views.launch, name='launch'),

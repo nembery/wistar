@@ -20,32 +20,30 @@
 import json
 import logging
 import time
+import traceback
 
 import yaml
 from django.contrib import messages
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from ajax import views as av
-from common.lib import junosUtils
 from common.lib import libvirtUtils
+from common.lib import openstackUtils
 from common.lib import osUtils
 from common.lib import ovsUtils
 from common.lib import wistarUtils
-from common.lib import openstackUtils
-
 from images.models import Image
 from scripts.models import Script
 from topologies.forms import ImportForm
-from topologies.models import Config
-from topologies.models import ConfigSet
 from topologies.models import Topology
 from wistar import configuration
 
-import traceback
 logger = logging.getLogger(__name__)
 
 
@@ -269,8 +267,7 @@ def detail(request, topo_id):
         logger.error('topology id %s was not found!' % topo_id)
         return render(request, 'error.html', {'error': "Topology not found!"})
 
-    config_sets = ConfigSet.objects.filter(topology=topology)
-    context = {'topo_id': topo_id, 'configSets': config_sets, 'topo': topology}
+    context = {'topo_id': topo_id, 'topo': topology}
     return render(request, 'topologies/edit.html', context)
 
 
@@ -360,43 +357,6 @@ def create(request):
         # context = { 'json': json, 'name': name, 'description': description }
         # return render(request, 'topologies/output.html', context)
         return HttpResponseRedirect(url)
-
-
-def create_config_set(request):
-    logger.debug('---- topology create_config_set ----')
-    required_fields = set(['name', 'description', 'topoId'])
-    if not required_fields.issubset(request.POST):
-        return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})
-
-    topology_id = request.POST["topoId"]
-    name = request.POST["name"]
-    description = request.POST["description"]
-
-    topology = get_object_or_404(Topology, pk=topology_id)
-
-    try:
-        # let's parse the json and convert to simple lists and dicts
-        config = wistarUtils.load_config_from_topology_json(topology.json, topology_id)
-    except Exception as e:
-        return render(request, 'ajax/ajaxError.html', {'error': str(e)})
-
-    c = ConfigSet(name=name, description=description, topology=topology)
-    c.save()
-
-    for device in config["devices"]:
-        if device["type"] == "junos_vmx" or device["type"] == "junos_vsrx":
-            try:
-                device_config = junosUtils.get_config(device["ip"], device["password"])
-
-                cfg = Config(ip=device["ip"], name=device["name"], password=device["password"],
-                             deviceConfig=device_config, configSet=c)
-                cfg.save()
-
-            except Exception as e:
-                logger.error('exception: %s' % e)
-                logger.debug("Could not connect to " + device["ip"], e)
-
-    return HttpResponseRedirect('/topologies/' + topology_id + '/')
 
 
 def launch(request, topology_id):
@@ -512,4 +472,3 @@ def add_instance_form(request):
                'dhcp_reservations': dhcp_reservations,
                }
     return render(request, 'topologies/overlay/add_instance.html', context)
-

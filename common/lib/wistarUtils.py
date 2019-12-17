@@ -128,7 +128,7 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
         p = dict()
         p["cidr"] = network['cidr']
         p["enable_dhcp"] = True
-        p["gateway_ip"] = ""
+        p["gateway_ip"] = network.get('gateway_ip', '')
         p["name"] = network["name"] + "_subnet"
         if network["name"] == "virbr0":
             p["network_id"] = configuration.openstack_mgmt_network
@@ -379,12 +379,17 @@ def load_config_from_topology_json(topology_json, topology_id):
     # iterate through the topology_json and construct the appropriate device and network objects
     # and each to the appropriate list
     devices = []
+
+    # networks are a list of bridges that need to be created
     networks = []
 
     # allow multiple external bridges
     external_bridges = dict()
     # allow multiple internal bridges
     internal_bridges = []
+
+    # network_cidrs is a mapping of all networks and their assigned CIDRs
+    network_cidrs = dict()
 
     device_index = 0
     chassis_name_to_index = dict()
@@ -632,18 +637,25 @@ def load_config_from_topology_json(topology_json, topology_id):
             connection_user_data = json_object.get('userData', {})
 
             if 'sourceIp' not in connection_user_data and 'targetIp' not in connection_user_data:
-                connection_cidr = __get_cidr_for_bridge(bridge_name, networks)
-                ips = __get_ips_for_bridge(bridge_name, networks)
-                source_ip = __get_next_ip_from_cidr(connection_cidr, ips)
-                ips.append(source_ip)
-                target_ip = __get_next_ip_from_cidr(connection_cidr, ips)
-                ips.append(target_ip)
+                network_cidrs = __assign_cidr_to_bridge(bridge_name, network_cidrs)
+                connection_cidr = network_cidrs[bridge_name]['cidr']
+                gateway_ip = __get_next_ip_for_bridge(bridge_name, network_cidrs)
+                source_ip = __get_next_ip_for_bridge(bridge_name, network_cidrs)
+                target_ip = __get_next_ip_for_bridge(bridge_name, network_cidrs)
+                ips = network_cidrs[bridge_name]['ips']
+                logger.debug('found connection with no source or target')
+                logger.debug(network_cidrs)
 
             else:
                 source_ip = connection_user_data['sourceIp']
                 target_ip = connection_user_data['targetIp']
                 connection_cidr = netaddr.IPNetwork(source_ip).cidr
                 ips = [source_ip, target_ip]
+                gateway_ip = ''
+                network_cidrs[bridge_name] = dict()
+                network_cidrs[bridge_name]['cidr'] = connection_cidr
+                network_cidrs[bridge_name]['ips'] = ips
+                logger.debug(network_cidrs)
 
             for d in devices:
                 if d["uuid"] == source_uuid:
@@ -729,9 +741,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                 connection["mac"] = generate_next_mac(topology_id)
                 connection['cidr'] = str(connection_cidr)
                 connection['ips'] = ips
-                logger.debug(
-                    'APPENDING'
-                )
+                connection['gateway_ip'] = gateway_ip
                 networks.append(connection)
                 conn_index += 1
 
@@ -762,17 +772,31 @@ def load_config_from_topology_json(topology_json, topology_id):
     return topology_config
 
 
-def __get_ips_for_bridge(bridge_name, networks):
-    for n in networks:
-        name = n['name']
+def __get_ips_for_bridge(bridge_name, network_cidrs):
+    for name, details_dict in network_cidrs:
         if bridge_name == name:
-            if 'ips' in n:
-                return n['ips']
+            if 'ips' in details_dict:
+                return details_dict['ips']
 
     return list()
 
 
-def __get_cidr_for_bridge(bridge_name, networks):
+def __assign_cidr_to_bridge(bridge_name, network_cidrs):
+    for name in network_cidrs:
+        if bridge_name == name:
+            # bridge has already been assigned
+            return network_cidrs
+
+    cidr_network = __get_new_cidr(network_cidrs)
+    logger.debug('going to assign this one: ')
+    logger.debug(cidr_network)
+    network_cidrs[bridge_name] = dict()
+    network_cidrs[bridge_name]['cidr'] = str(cidr_network)
+    network_cidrs[bridge_name]['ips'] = list()
+    return network_cidrs
+
+
+def __get_cidr_for_bridge(bridge_name, network_cidrs):
     """
     Search the networks list to find the network with this name
     and return it's configured cidr, if not found or a cidr is not configured, return a new unique cidr
@@ -781,19 +805,58 @@ def __get_cidr_for_bridge(bridge_name, networks):
     :param networks:
     :return:
     """
-    for n in networks:
-        name = n['name']
+    for name, detail_dict in network_cidrs.items():
         if bridge_name == name:
-            if 'cidr' in n:
-                return netaddr.IPNetwork(n['cidr'])
+            if 'cidr' in detail_dict:
+                cidr = detail_dict['cidr']
+                return netaddr.IPNetwork(cidr)
 
-    return __get_new_cidr(networks)
+    return __get_new_cidr(network_cidrs)
+
+
+def __get_bridge_cidr_details(bridge_name, network_cidrs):
+    cidr_details = dict()
+
+    # ensure we have this bridge captured in the network_cidrs dict
+    for name, details in network_cidrs.items():
+        if bridge_name == name:
+            cidr_details = details
+            break
+
+    # whether we found it or not, ensure it has the correct structure
+    if type(cidr_details) is not dict:
+        cidr_details = dict()
+
+    if 'ips' not in cidr_details:
+        cidr_details['ips'] = list()
+
+    if 'cidr' not in cidr_details:
+        cidr_details['cidr'] = __get_new_cidr(network_cidrs)
+
+    return cidr_details
+
+
+def __get_next_ip_for_bridge(bridge_name, network_cidrs):
+    cidr_details = __get_bridge_cidr_details(bridge_name, network_cidrs)
+    cidr = cidr_details['cidr']
+    ips = cidr_details['ips']
+    ip_network = netaddr.IPNetwork(cidr)
+    next_ip = __get_next_ip_from_cidr(ip_network, ips)
+    ips.append(next_ip)
+    return next_ip
 
 
 def __get_next_ip_from_cidr(ip_network, used_ips):
+    skip = 2
+    counter = 0
     for iph in ip_network.iter_hosts():
+        counter = counter + 1
+        if counter <= skip:
+            continue
+
         ip = str(iph)
         if ip not in used_ips:
+            logger.debug('found unused ip %s' % ip)
             return ip
 
 
@@ -810,16 +873,27 @@ def __get_new_cidr(networks):
         private_subnet = 27
 
     private_network = netaddr.IPNetwork(private_cidr)
-
-    if networks is None or len(networks) == 0:
+    logger.debug('checking networks')
+    logger.debug(networks)
+    if networks is None or len(networks.keys()) == 0:
         # return list(private_network.subnet(private_subnet))[0]
-        return next(private_network.subnet(private_subnet))
+        next_cidr = next(private_network.subnet(private_subnet))
+        logger.debug('returning first %s' % next_cidr)
+        return str(next_cidr)
 
     for s in private_network.subnet(private_subnet):
-        for n in networks:
-            cidr = n.get('cidr', '')
-            if cidr != str(s):
-                return s
+        found = False
+        for c in networks.values():
+            logger.debug('checking c %s' % c)
+            if 'cidr' in c:
+                cidr = c['cidr']
+                if cidr == str(s):
+                    found = True
+                    continue
+
+        if not found:
+            logger.debug('returning %s' % s)
+            return str(s)
 
     raise WistarException('Could not locate a new private network cidr!')
 

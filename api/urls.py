@@ -30,7 +30,6 @@ urlpatterns = [
     url(r'^checkImage/$', views.check_image_exists, name='check_image'),
     url(r'^createImage/$', views.create_local_image, name='create_image'),
     url(r'^deleteImage/$', views.delete_image, name='delete_image'),
-    url(r'^configureTopology/$', views.configure_topology, name='configure_topology'),
     url(r'^ansibleInventory/$', views.get_topology_inventory, name='topology_inventory'),
     url(r'^importGlanceImage/$', views.import_glance_image, name='import_glance_image'),
 ]

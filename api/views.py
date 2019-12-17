@@ -28,7 +28,6 @@ from ajax import views as av
 from api.lib import apiUtils
 from common.lib import consoleUtils
 from common.lib import libvirtUtils
-from common.lib import linuxUtils
 from common.lib import osUtils
 from common.lib import ovsUtils
 from common.lib import wistarUtils
@@ -176,81 +175,6 @@ def get_topology_status(request):
     except Exception as ex:
         logger.debug(str(ex))
         context["message"] = "Caught Exception!"
-        return HttpResponse(json.dumps(context), content_type="application/json")
-
-
-def configure_topology(request):
-    """
-        DEPRECATED
-        configures the topology with the correct access information!
-        required parameters: topology_name, id of which to clone, cloud_init data
-        returns json { "status": "running|unknown|powered off", "topology_id": "0" }
-
-    """
-    context = {"status": "unknown"}
-
-    required_fields = set(['topology_name', 'script_id', 'script_data'])
-    if not required_fields.issubset(request.POST):
-        context["status"] = "unknown"
-        context["message"] = "Invalid parameters in POST HERE"
-        return HttpResponse(json.dumps(context), content_type="application/json")
-
-    topology_name = request.POST['topology_name']
-    script_id = request.POST['script_id']
-    script_data = request.POST["script_data"]
-
-    try:
-        # get the topology by name
-        topo = Topology.objects.get(name=topology_name)
-        if apiUtils.get_domain_status_for_topology(topo.id) != "running":
-            context["status"] = "unknown"
-            context["message"] = "Not all domains are running"
-            return HttpResponse(json.dumps(context), content_type="application/json")
-
-        raw_json = json.loads(topo.json)
-        for obj in raw_json:
-            if "userData" in obj and "wistarVm" in obj["userData"]:
-                ip = obj["userData"]["ip"]
-                password = obj["userData"]["password"]
-                image_type = obj["userData"]["type"]
-                mgmt_interface = obj["userData"]["mgmtInterface"]
-                hostname = obj["userData"]["label"]
-
-                domain_name = "t%s_%s" % (topo.id, hostname)
-
-                if image_type == "linux":
-                    # preconfigure the instance using the console
-                    # this will set the management IP, hostname, etc
-                    try:
-                        consoleUtils.preconfig_linux_domain(domain_name, hostname, password, ip, mgmt_interface)
-                        time.sleep(1)
-
-                        # if given a script, let's copy it to the host and run it with the specified script data
-                        if script_id != 0:
-                            script = Script.objects.get(pk=script_id)
-                            # push the
-                            linuxUtils.push_remote_script(ip, "root", password, script.script, script.destination)
-                            output = linuxUtils.execute_cli(ip, "root", password,
-                                                            script.destination + " " + script_data)
-                            logger.debug(output)
-                    except Exception as e:
-                        logger.debug("Could not configure domain: %s" % e)
-                        context["status"] = "unknown"
-                        context["message"] = "Could not configure domain: %s " % e
-                        return HttpResponse(json.dumps(context), content_type="application/json")
-
-                elif image_type == "junos":
-                    consoleUtils.preconfig_junos_domain(domain_name, password, ip, mgmt_interface)
-                else:
-                    logger.debug("Skipping unknown object")
-
-        context["status"] = "configured"
-        context["message"] = "All sandbox nodes configured"
-        return HttpResponse(json.dumps(context), content_type="application/json")
-
-    except ObjectDoesNotExist:
-        context["status"] = "unknown"
-        context["message"] = "Sandbox doesn't exist!"
         return HttpResponse(json.dumps(context), content_type="application/json")
 
 
