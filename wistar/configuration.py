@@ -20,6 +20,7 @@
 # some basic configuration parameters for wistar
 
 import vm_definitions
+
 # What should we show as the title across all pages?
 # Useful to customize this if you have multiple wistar instances on different servers / clusters
 wistar_title = 'Wistar - Virtual Lab Environment'
@@ -122,4 +123,13 @@ check_vm_network_state = True
 # extra configuration parameters to pass into cloud-init scripts
 cloud_init_params = {
     'salt_master': '10.10.10.10'
+}
+
+# notification_url - where to send web hooks for new topology deployments
+notification_url = 'http://10.10.10.10:5000'
+# set these to use authenticated web hooks
+notification_login_url = ''
+notification_login_payload = {
+    "username": "",
+    "password": ""
 }

@@ -20,24 +20,25 @@
 import json
 import logging
 import math
-import netaddr
 import os
 import re
 import subprocess
 import time
-from passlib.hash import md5_crypt
 
+import netaddr
+import requests
 from django.core.exceptions import ObjectDoesNotExist
+from passlib.hash import md5_crypt
 
 import imageUtils
 import libvirtUtils
 import openstackUtils
 import osUtils
+from exceptions import WistarException
 from images.models import Image
 from topologies.models import Topology
 from wistar import configuration
 from wistar import settings
-from exceptions import WistarException
 
 logger = logging.getLogger(__name__)
 # keep track of how many mac's we've used
@@ -861,7 +862,6 @@ def __get_next_ip_from_cidr(ip_network, used_ips):
 
 
 def __get_new_cidr(networks):
-
     if hasattr(configuration, 'private_cidr'):
         private_cidr = configuration.private_cidr
     else:
@@ -996,9 +996,9 @@ def launch_proxy(local_port, remote_port, remote_ip):
     wistar_proxy_path = os.path.abspath(ws)
 
     cmd = "/usr/bin/env python %s --local-port=%s --remote-ip=%s --remote-port=%s &" % (wistar_proxy_path,
-                                                                    local_port,
-                                                                    remote_ip,
-                                                                    remote_port)
+                                                                                        local_port,
+                                                                                        remote_ip,
+                                                                                        remote_port)
 
     logger.debug(cmd)
 
@@ -1270,3 +1270,70 @@ def create_disk_instance(device, disk_params):
 
     logger.debug("Using %s" % disk_instance_path)
     return disk_instance_path
+
+
+def get_topology_inventory(topology):
+    """
+    Get list of all hosts defined in a topology
+    :param topology: topology model object
+    :return: dictionary containing all the hosts as keys. Each value is a dict containing 'host', 'user', 'passwd',
+    and a list of 'roles' if found
+    """
+    hosts = dict()
+    tj = json.loads(topology.json)
+    for json_object in tj:
+        logger.debug('checking object %s' % json_object)
+        if "userData" in json_object and "wistarVm" in json_object["userData"]:
+            ud = json_object["userData"]
+            logger.debug('got a VM here!')
+
+            if "parentName" not in ud:
+                # child VMs will have a parentName attribute
+                # let's skip them for inventory automation purposes
+                name = ud.get('name', 'no name')
+                ip = ud.get('ip', '0.0.0.0')
+                username = ud.get('username', 'root')
+                password = ud.get('password', 'Clouds123')
+                hosts[name] = dict()
+                hosts[name]['host'] = ip
+                hosts[name]['user'] = username
+                hosts[name]['passwd'] = password
+                hosts[name]['grains'] = dict()
+                hosts[name]['grains']['image_type'] = ud.get('type', '')
+                hosts[name]['grains']['cpu'] = ud.get('cpu', '')
+                hosts[name]['grains']['ram'] = ud.get('ram', '')
+                hosts[name]['grains']['name'] = ud.get('name', '')
+                hosts[name]['grains']['topology'] = topology.id
+
+                if 'roles' in ud:
+                    hosts[name]['grains']['roles'] = ud.get('roles', [])
+
+    return hosts
+
+
+def send_new_topology_event(topology_inventory):
+    if not hasattr(configuration, 'notification_url'):
+        logger.debug('no notification_url setting found in configuration, not sending event')
+        return None
+
+    notification_host = configuration.notification_url + '/new_topology'
+    notification_login = configuration.notification_login_url
+    notification_login_payload = configuration.notification_login_payload
+
+    logger.debug('sending topology_inventory')
+    try:
+        session = requests.Session()
+        if notification_login != '':
+            rep = session.post(notification_login, verify=False, json=notification_login_payload)
+            if rep.status_code != 200:
+                logger.warn('Could not authenticate for event notification!')
+                return None
+        r = session.post(notification_host, json=topology_inventory, verify=False, timeout=30)
+        logger.info('sent notification with return code %s' % r.status_code)
+    except ValueError as ve:
+        logger.error('Could not parse topology inventory into JSON')
+        logger.error(ve)
+    except Exception as e:
+        logger.error('Could not send notification')
+        logger.error(e)
+

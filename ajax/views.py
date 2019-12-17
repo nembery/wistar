@@ -638,6 +638,8 @@ def redeploy_topology(request):
     # forward onto deploy topo
     try:
         inline_deploy_topology(config)
+        inventory = wistarUtils.get_topology_inventory(topo)
+        wistarUtils.send_new_topology_event(inventory)
     except Exception as e:
         logger.debug("Caught Exception in inline_deploy")
         logger.debug(str(e))
@@ -661,6 +663,8 @@ def deploy_topology(request):
         config = wistarUtils.load_config_from_topology_json(topo.json, topology_id)
         # FIXME - should this be pushed into another module?
         inline_deploy_topology(config)
+        inventory = wistarUtils.get_topology_inventory(topo)
+        wistarUtils.send_new_topology_event(inventory)
     except Exception as e:
         logger.debug("Caught Exception in deploy")
         logger.debug(str(e))
@@ -681,6 +685,11 @@ def inline_deploy_topology(config):
     :param config: output of the wistarUtils.
     :return:
     """
+
+    if configuration.deployment_backend != 'kvm':
+        raise WistarException('Cannot deploy to KVM configured deployment backend is %s'
+                              % configuration.deployment_backend)
+
     is_ovs = False
     is_linux = osUtils.check_is_linux()
     is_ubuntu = osUtils.check_is_ubuntu()
@@ -1097,7 +1106,10 @@ def deploy_stack(request, topology_id):
 
         # FIXME - verify all images are in glance before jumping off here!
 
-        logger.debug(openstackUtils.create_stack(stack_name, heat_template))
+        ret = openstackUtils.create_stack(stack_name, heat_template)
+        if ret is not None:
+            inventory = wistarUtils.get_topology_inventory(topology)
+            wistarUtils.send_new_topology_event(inventory)
 
         return HttpResponseRedirect('/topologies/' + topology_id + '/')
 

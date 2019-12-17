@@ -367,6 +367,11 @@ def launch(request, topology_id):
         logger.debug(ex)
         return render(request, 'error.html', {'error': "Topology not found!"})
 
+    if configuration.deployment_backend == 'openstack':
+        ret = av.deploy_stack(request, topology_id)
+        if ret is not None:
+            inventory = wistarUtils.get_topology_inventory(topology)
+            wistarUtils.send_new_topology_event(inventory)
     try:
         # let's parse the json and convert to simple lists and dicts
         config = wistarUtils.load_config_from_topology_json(topology.json, topology_id)
@@ -375,9 +380,15 @@ def launch(request, topology_id):
         # but the right structure isn't really there for a middle layer other
         # than utility and view layers ... unless I want to mix utility libs
         av.inline_deploy_topology(config)
+        inventory = wistarUtils.get_topology_inventory(topology)
+        wistarUtils.send_new_topology_event(inventory)
     except Exception as e:
         logger.error('exception: %s' % e)
         return render(request, 'error.html', {'error': str(e)})
+
+    if configuration.deployment_backend != 'kvm':
+        # only continue in kvm case, openstack will start instances for us on deployment
+        return
 
     domain_list = libvirtUtils.get_domains_for_topology("t%s_" % topology_id)
     network_list = []

@@ -372,6 +372,8 @@ def start_topology(request):
 
                 # FIXME - should this be pushed into another module?
                 av.inline_deploy_topology(config)
+                inventory = wistarUtils.get_topology_inventory(topology)
+                wistarUtils.send_new_topology_event(inventory)
 
             # now, topology should be deployed and ready to go!
             network_list = libvirtUtils.get_networks_for_topology("t" + str(topology.id) + "_")
