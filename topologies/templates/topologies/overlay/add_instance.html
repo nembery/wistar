@@ -122,6 +122,8 @@
                    value="0"/>
         </td>
     </tr>
+    </tbody>
+    <tbody id="rolestboday">
     <tr>
         <td>
             Roles
@@ -131,8 +133,14 @@
                 <ul id="instanceRoles" style="list-style-type: square; margin-bottom: 10px;"></ul>
             </div>
             Add Role:
-            <input id="instanceNewRole" style="width: 75px;"
-                   type="text"/>
+{#            <input id="instanceNewRole" style="width: 75px;"#}
+{#                   type="text"/>#}
+            <select id="instanceNewRole">
+                <option value="">None</option>
+                {% for r in global_config.defined_roles %}
+                <option value="{{ r }}">{{ r }}</option>
+                {% endfor %}
+            </select>
             <input onclick="addNewInstanceRole()" type="button" value="Add"/>
             &nbsp;
             <input onclick="clearNewInstanceRoles()" type="button" value="Clear"/>&nbsp;
