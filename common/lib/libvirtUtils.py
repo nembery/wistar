@@ -517,7 +517,7 @@ def get_next_domain_vnc_port(offset=0):
     used_ports = []
     domains = conn.listAllDomains(0)
     for d in domains:
-        vnc_port = (d)
+        vnc_port = get_domain_vnc_port(d)
         try:
             port = int(vnc_port)
             if port != 0 and port != -1:
