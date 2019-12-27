@@ -1,11 +1,14 @@
 version: '3'
 services:
   wistar:
-    build: ../
+    # uncomment build if you would prefer to keep a locally built image instead of the pre-built image from docker hub
+    # build: ../
+    image: nembery/wistar:dev
     ports:
     - "80:80"
     volumes:
      - ./configuration.py:/opt/wistar/app/wistar/configuration.py
      - ./db.sqlite3:/opt/wistar/app/db.sqlite3
+     - ../cloud_init_templates:/opt/wistar/scripts
      - /opt/wistar/user_images:/opt/wistar/user_images
      - /var/run/libvirt:/var/run/libvirt
