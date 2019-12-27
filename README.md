@@ -3,7 +3,7 @@ Wistar
 
 Wistar is a tool to help create and share complex topologies of Virtual Machines and appliances.
 
-![screenshot](../docs/screenshots/screenshot.png "Wistar uses drag and drop to create topologies of networks")
+![screenshot](docs/screenshots/screenshot.png "Wistar uses drag and drop to create topologies of networks")
 
 
 The most detailed, up to date, documentation can be found here:

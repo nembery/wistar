@@ -1,2 +1,3 @@
-db.sqlite3
-wistar/configuration-local.py
+**/db.sqlite3
+**/configuration-local.py
+venv/

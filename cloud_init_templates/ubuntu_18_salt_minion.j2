@@ -1,0 +1,36 @@
+#cloud-config
+hostname: {{ config.hostname }}
+debug: True
+ssh_pwauth: True
+chpasswd:
+    list: |
+        root:{{ config.password }}
+        {{ config.ssh_user }}:{{config.password }}
+    expire: False
+users:
+    - name: {{ config.ssh_user }}
+      ssh-authorized-keys:
+        - {{ config.ssh_key }}
+      groups: sudo
+      shell: /bin/bash
+
+apt:
+  sources:
+    saltstack:
+      source: deb http://repo.saltstack.com/py3/ubuntu/18.04/amd64/latest bionic main
+      key: |
+      {{ config.salt_repo_key }}
+salt_minion:
+  conf:
+    master: {{ config.salt_master_ip }}
+    id: {{ config.hostname }}-{{ config.ip_address | replace('.', '_') }}-wistar
+    autosign_grains:
+      - wistar_key
+    grains:
+      wistar_key: {{ config.wistar_minion_key }}
+{%- if config.roles is defined %}
+      role:
+{%- for r in config.roles %}
+        - {{ r }}
+{%- endfor %}
+{% endif %}

@@ -7,4 +7,3 @@ configuration-local.py
 ../docs/_build
 local.env
 .DS_Store
-venv

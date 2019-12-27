@@ -1,0 +1,32 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:2.7
+
+    steps:
+      - checkout
+      - run:
+          name: Build and push Docker image
+          command: |
+            export DATE=$(date '+%Y-%m-%dT%H:%M:%S')
+            export RELEASE='2.0'
+            echo $DATE > common/templates/version.html
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              export TAG=$RELEASE.${CIRCLE_BUILD_NUM}
+            elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+              export TAG=dev
+            elif [ "${CIRCLE_BRANCH}" == "beta" ]; then
+              export TAG=beta
+            else
+              echo "Not building other branch"
+              exit 0;
+            fi
+            docker build -t nembery/wistar:$TAG .
+            echo ${DOCKER_PWD} | docker login -u ${DOCKER_LOGIN} --password-stdin
+            docker push nembery/wistar:$TAG
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag nembery/wistar:$TAG nembery/wistar:latest
+              docker push nembery/wistar:latest
+            fi
+

@@ -1,0 +1,14 @@
+#cloud-config
+hostname: {{ config.hostname }}
+debug: True
+ssh_pwauth: True
+chpasswd:
+    list: |
+        {{ config.ssh_user }}:{{config.password }}
+    expire: False
+users:
+    - name: {{ config.ssh_user }}
+      ssh-authorized-keys:
+        - {{ config.ssh_key }}
+      groups: sudo
+      shell: /bin/bash
