@@ -133,3 +133,10 @@ notification_login_payload = {
     "username": "",
     "password": ""
 }
+
+# make our defined roles here - These will appear in the 'add instance' form and allows you to assign
+# roles to each VM added to the topology. These roles will be available to the varioous inventory plugins
+# and notifications. This is useful to sending notifications about new VMs to external systems such as saltstack
+# which can use these roles to then auto-configure your hosts
+defined_roles = ['example_role', 'base_linux', 'traffic_generator']
+
