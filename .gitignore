@@ -1,5 +1,5 @@
 *pyc
-db.sqlite3
+app/db.sqlite3
 .idea
 configuration-backup.py
 configuration-golden.py

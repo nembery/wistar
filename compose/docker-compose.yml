@@ -1,0 +1,11 @@
+version: '3'
+services:
+  wistar:
+    build: ../
+    ports:
+    - "80:80"
+    volumes:
+     - ./configuration.py:/opt/wistar/app/wistar/configuration.py
+     - ./db.sqlite3:/opt/wistar/app/db.sqlite3
+     - /opt/wistar/user_images:/opt/wistar/user_images
+     - /var/run/libvirt:/var/run/libvirt
