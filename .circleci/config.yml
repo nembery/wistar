@@ -11,7 +11,7 @@ jobs:
           command: |
             export DATE=$(date '+%Y-%m-%dT%H:%M:%S')
             export RELEASE='2.0'
-            echo $DATE > common/templates/version.html
+            echo $DATE > app/common/templates/version.html
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               export TAG=$RELEASE.${CIRCLE_BUILD_NUM}
             elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
