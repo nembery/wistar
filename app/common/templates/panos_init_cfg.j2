@@ -3,3 +3,5 @@ ip-address={{ config.mgmt_ip|replace("/24", "") }}
 default-gateway={{ config.mgmt_gateway }}
 netmask=255.255.255.0
 hostname={{ config.host_name }}
+dns-primary={{ config.dns_primary | default('4.2.2.2') }}
+op-cmd-dpdk-pkt-io=off
