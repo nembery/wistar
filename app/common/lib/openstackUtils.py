@@ -43,6 +43,7 @@ _data_url = ':8143/api/tenant/networking/'
 _auth_token = ""
 _project_auth_token = ""
 _tenant_id = ""
+_user_id = ""
 
 _token_cache_time = time.time()
 _project_token_cache_time = time.time()
@@ -58,6 +59,7 @@ def connect_to_openstack():
     authenticates to keystone at configuration.openstack_host with OPENSTACK_USER, OPENSTACK_PASS
     will set the _auth_token property on success, which is then used for all subsequent
     calls from this module
+
     :return: True on successful authentication to keystone, False otherwise
     """
 
@@ -80,6 +82,7 @@ def connect_to_openstack():
     global _auth_token
     global _tenant_id
     global _token_cache_time
+    global _user_id
 
     # simple cache calculation
     # _token_cache_time will get updated when we refresh the token
@@ -126,6 +129,10 @@ def connect_to_openstack():
         request.add_header("charset", "UTF-8")
         request.add_header("Content-Length", len(_auth_json))
         result = urllib2.urlopen(request, _auth_json)
+
+        result_json = json.loads(result.read())
+        _user_id = result_json.get('token', {}).get('user', {}).get('id', None)
+
         _auth_token = result.info().getheader('X-Subject-Token')
         # now get the tenant_id for the chosen project
         _tenant_id = get_project_id(configuration.openstack_project)
@@ -199,13 +206,14 @@ def get_project_auth_token(project):
 def get_project_id(project_name):
     """
     Gets the UUID of the project by project_name
+
     :param project_name: Name of the Project
     :return: string UUID or None
     """
 
     logger.debug("--- get_project_id ---")
 
-    projects_url = create_os_url('/projects')
+    projects_url = create_os_url('/users/%s/projects' % _user_id)
     projects_string = do_get(projects_url)
     if projects_string is None:
         return None
@@ -490,6 +498,7 @@ def get_image_id_for_name(image_name):
 def get_stack_details(stack_name):
     """
     Returns python object representing Stack details
+
     :param stack_name: name of the stack to find
     :return: stack object or None if not found!
     """
@@ -498,6 +507,10 @@ def get_stack_details(stack_name):
     url = create_heat_url("/%s/stacks" % _tenant_id)
 
     stacks_list_string = do_get(url)
+    if stacks_list_string is None:
+        logger.info("No stacks were found!")
+        return None
+
     stacks_list = json.loads(stacks_list_string)
     for stack in stacks_list["stacks"]:
         if stack["stack_name"] == stack_name:
