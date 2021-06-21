@@ -112,12 +112,12 @@ def connect_to_openstack():
                         "domain": {
                             "id": "default"
                         },
-                        "name": "admin"
+                        "name": "%s"
                     }
                 }
             }
         }
-        """ % (configuration.openstack_user, configuration.openstack_password)
+        """ % (configuration.openstack_user, configuration.openstack_password, configuration.openstack_project)
 
     try:
         _auth_token = ""
