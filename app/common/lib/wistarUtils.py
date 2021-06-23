@@ -301,6 +301,12 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
             user_data_string = osUtils.render_cloud_init_user_data(device_config, script_string)
             dr["properties"]["user_data"] = user_data_string
 
+        else:
+            metadata = dict()
+            metadata["hostname"] = device["name"]
+            metadata["admin_pass"] = device['password']
+            dr["properties"]["metadata"] = metadata
+
         template["resources"][device["name"]] = dr
 
     for device in config["devices"]:
