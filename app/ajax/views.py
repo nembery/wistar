@@ -70,7 +70,7 @@ def instance_details(request):
             return render(request, 'ajax/instanceDetails.html', {'d': {}, 'vnc_port': 6000})
 
     except Exception as e:
-        print e
+        print(e)
         return render(request, 'ajax/ajaxError.html', {'error': e})
 
 
@@ -915,7 +915,7 @@ def launch_web_console(request):
     else:
         logger.debug("nope")
         # start the ws ports at 6900
-        wc_port = len(wc_dict.keys()) + 6900
+        wc_port = len(list(wc_dict.keys())) + 6900
 
         logger.debug("using wsPort of " + str(wc_port))
         # get the domain from the hypervisor

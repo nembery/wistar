@@ -1,5 +1,5 @@
 import os
-import configuration as config
+from . import configuration as config
 
 
 def setup_configuration():
@@ -10,7 +10,7 @@ def setup_configuration():
     :return: None
     """
     for e in os.environ:
-        print 'Looking for env var %s' % e
+        print('Looking for env var %s' % e)
         if str(e).startswith('WISTAR_'):
             config_item = str(e).split('WISTAR_')[1]
             config_value = os.environ.get(e)

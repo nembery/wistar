@@ -30,11 +30,11 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from passlib.hash import md5_crypt
 
-import imageUtils
-import libvirtUtils
-import openstackUtils
-import osUtils
-from exceptions import WistarException
+from . import imageUtils
+from . import libvirtUtils
+from . import openstackUtils
+from . import osUtils
+from .exceptions import WistarException
 from images.models import Image
 from topologies.models import Topology
 from wistar import configuration
@@ -221,7 +221,7 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
                 context['host_name'] = device["name"]
                 context['md5_password'] = md5_crypt.hash(device['password'])
                 # pull in all the extra cloud-init-params
-                for k, v in configuration.cloud_init_params.items():
+                for k, v in list(configuration.cloud_init_params.items()):
                     context[k] = v
 
                 encoded_config_drive = osUtils.create_panos_cloud_init_b64(device['name'], context)
@@ -575,7 +575,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                 # we do have management interfaces first, so let's go ahead and add them to the device
                 # THIS ASSUMES THE JSON CONFIGURATION IS VALID! I.E. all interface indexes are accounted for
                 # 0, 1, 2, 3 etc.
-                interfaces = device_interface_wiring.keys()
+                interfaces = list(device_interface_wiring.keys())
                 interfaces.sort()
 
                 for interface in interfaces:
@@ -626,10 +626,10 @@ def load_config_from_topology_json(topology_json, topology_id):
                 bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(target_uuid))
             elif source_uuid in internal_bridges:
                 bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(source_uuid))
-            elif target_uuid in external_bridges.keys():
+            elif target_uuid in list(external_bridges.keys()):
                 bridge_name = external_bridges[target_uuid]
                 create_bridge = False
-            elif source_uuid in external_bridges.keys():
+            elif source_uuid in list(external_bridges.keys()):
                 bridge_name = external_bridges[target_uuid]
                 create_bridge = False
             else:
@@ -668,7 +668,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                     # essentially same of create_bridge flag, but kept on the interface for later use in heat template
                     interface["bridge_preexists"] = False
                     interface['ip_address'] = source_ip
-                    if target_uuid in external_bridges.keys():
+                    if target_uuid in list(external_bridges.keys()):
                         # do not create external bridges...
                         create_bridge = False
                         interface["bridge_preexists"] = True
@@ -702,7 +702,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                     interface["bridge_preexists"] = False
                     interface["ip_address"] = target_ip
 
-                    if source_uuid in external_bridges.keys():
+                    if source_uuid in list(external_bridges.keys()):
                         create_bridge = False
                         # keep bridge existence information on the interface for use in heat template
                         interface["bridge_preexists"] = True
@@ -806,7 +806,7 @@ def __get_cidr_for_bridge(bridge_name, network_cidrs):
     :param networks:
     :return:
     """
-    for name, detail_dict in network_cidrs.items():
+    for name, detail_dict in list(network_cidrs.items()):
         if bridge_name == name:
             if 'cidr' in detail_dict:
                 cidr = detail_dict['cidr']
@@ -819,7 +819,7 @@ def __get_bridge_cidr_details(bridge_name, network_cidrs):
     cidr_details = dict()
 
     # ensure we have this bridge captured in the network_cidrs dict
-    for name, details in network_cidrs.items():
+    for name, details in list(network_cidrs.items()):
         if bridge_name == name:
             cidr_details = details
             break
@@ -875,7 +875,7 @@ def __get_new_cidr(networks):
     private_network = netaddr.IPNetwork(private_cidr)
     logger.debug('checking networks')
     logger.debug(networks)
-    if networks is None or len(networks.keys()) == 0:
+    if networks is None or len(list(networks.keys())) == 0:
         # return list(private_network.subnet(private_subnet))[0]
         next_cidr = next(private_network.subnet(private_subnet))
         logger.debug('returning first %s' % next_cidr)
@@ -883,7 +883,7 @@ def __get_new_cidr(networks):
 
     for s in private_network.subnet(private_subnet):
         found = False
-        for c in networks.values():
+        for c in list(networks.values()):
             logger.debug('checking c %s' % c)
             if 'cidr' in c:
                 cidr = c['cidr']

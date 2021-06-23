@@ -21,10 +21,10 @@ import time
 import logging
 import pexpect
 import os
-import openstackUtils
+from . import openstackUtils
 from wistar import configuration
 
-from exceptions import WistarException
+from .exceptions import WistarException
 
 # simple utility lib to use virsh console to set up a device before 
 # networking is available

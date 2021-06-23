@@ -553,7 +553,7 @@ def get_next_domain_vnc_port(offset=0):
         logger.debug("returning max+1+offset: " + str(next_port))
         return next_port
     else:
-        print "No vnc ports currently in use"
+        print("No vnc ports currently in use")
         # return int(5900) + offset
         return configuration.vnc_start_port + offset
 

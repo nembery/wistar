@@ -32,9 +32,9 @@ else:
     s2b = lambda s: s      # No-op
     s2a = lambda s: [ord(c) for c in s]
 try:    from io import StringIO
-except: from cStringIO import StringIO
+except: from io import StringIO
 try:    from http.server import SimpleHTTPRequestHandler
-except: from SimpleHTTPServer import SimpleHTTPRequestHandler
+except: from http.server import SimpleHTTPRequestHandler
 
 # python 2.6 differences
 try:    from hashlib import sha1
@@ -58,7 +58,7 @@ for mod, msg in [('numpy', 'HyBi protocol will be slower'),
         globals()[mod] = __import__(mod)
     except ImportError:
         globals()[mod] = None
-        print("WARNING: no '%s' module, %s" % (mod, msg))
+        print(("WARNING: no '%s' module, %s" % (mod, msg)))
 
 if multiprocessing and sys.platform == 'win32':
     # make sockets pickle-able/inheritable
@@ -721,7 +721,7 @@ class WebSocketServer(object):
         # Close open files
         maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
         if maxfd == resource.RLIM_INFINITY: maxfd = 256
-        for fd in reversed(range(maxfd)):
+        for fd in reversed(list(range(maxfd))):
             try:
                 if fd != keepfd:
                     os.close(fd)
@@ -1024,7 +1024,7 @@ class WebSocketServer(object):
             lsock.close()
 
             # Restore signals
-            for sig, func in original_signals.items():
+            for sig, func in list(original_signals.items()):
                 signal.signal(sig, func)
 
 

@@ -18,8 +18,8 @@
 #
 
 import logging
-import openstackUtils
-import osUtils
+from . import openstackUtils
+from . import osUtils
 import re
 from images.models import Image
 from wistar import configuration

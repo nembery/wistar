@@ -451,7 +451,7 @@ def get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, passw
 
     # allow extra config params from the configuration file
     if hasattr(configuration, 'cloud_init_params') and type(configuration.cloud_init_params) is dict:
-        for k, v in configuration.cloud_init_params.items():
+        for k, v in list(configuration.cloud_init_params.items()):
             config[k] = v
 
     # do not allow 'root' user as the default ssh_user as this causes Junos configuration errors

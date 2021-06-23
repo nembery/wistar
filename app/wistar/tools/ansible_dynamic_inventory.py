@@ -50,5 +50,5 @@ for json_object in raw_json:
             username = ud.get('username', 'root')
             inventory[str(name)] = {"ansible_host": str(ip), "ansible_user": str(username)}
 
-print inventory
+print(inventory)
 

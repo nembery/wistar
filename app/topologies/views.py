@@ -458,8 +458,8 @@ def add_instance_form(request):
     image_list = Image.objects.all().order_by('name')
     script_list = Script.objects.all().order_by('name')
     cloud_init_templates = osUtils.get_cloud_init_templates()
-    print 'using cloud init scripts'
-    print cloud_init_templates
+    print('using cloud init scripts')
+    print(cloud_init_templates)
     vm_types = configuration.vm_image_types
     vm_types_string = json.dumps(vm_types)
 

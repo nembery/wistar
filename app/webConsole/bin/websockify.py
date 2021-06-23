@@ -13,16 +13,16 @@ as taken from http://docs.python.org/dev/library/ssl.html#certificates
 
 import signal, socket, optparse, time, os, sys, subprocess, logging
 try:    from socketserver import ForkingMixIn
-except: from SocketServer import ForkingMixIn
+except: from socketserver import ForkingMixIn
 try:    from http.server import HTTPServer
-except: from BaseHTTPServer import HTTPServer
+except: from http.server import HTTPServer
 from select import select
 import websocket_local
 try:
     from urllib.parse import parse_qs, urlparse
 except:
     from cgi import parse_qs
-    from urlparse import urlparse
+    from urllib.parse import urlparse
 
 class ProxyRequestHandler(websocket_local.WebSocketRequestHandler):
 
@@ -90,7 +90,7 @@ Traffic Legend:
         # Extract the token parameter from url
         args = parse_qs(urlparse(path)[4]) # 4 is the query from url
 
-        if not args.has_key('token') or not len(args['token']):
+        if 'token' not in args or not len(args['token']):
             raise self.EClose("Token not present")
 
         token = args['token'][0].rstrip('\n')
@@ -112,7 +112,7 @@ Traffic Legend:
 
         self.vmsg("Target config: %s" % repr(targets))
 
-        if targets.has_key(token):
+        if token in targets:
             return targets[token].split(':')
         else:
             raise self.EClose("Token '%s' not found" % token)
@@ -451,8 +451,8 @@ class LibProxyServer(ForkingMixIn, HTTPServer):
         self.run_once  = kwargs.pop('run_once', False)
         self.handler_id = 0
 
-        for arg in kwargs.keys():
-            print("warning: option %s ignored when using --libserver" % arg)
+        for arg in list(kwargs.keys()):
+            print(("warning: option %s ignored when using --libserver" % arg))
 
         if web:
             os.chdir(web)

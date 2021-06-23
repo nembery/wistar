@@ -21,8 +21,8 @@ import json
 import logging
 import mmap
 import time
-import urllib2
-from urllib2 import URLError
+import urllib.request, urllib.error, urllib.parse
+from urllib.error import URLError
 
 from wistar import configuration
 
@@ -43,6 +43,7 @@ _data_url = ':8143/api/tenant/networking/'
 _auth_token = ""
 _project_auth_token = ""
 _tenant_id = ""
+_user_id = ""
 
 _token_cache_time = time.time()
 _project_token_cache_time = time.time()
@@ -58,6 +59,7 @@ def connect_to_openstack():
     authenticates to keystone at configuration.openstack_host with OPENSTACK_USER, OPENSTACK_PASS
     will set the _auth_token property on success, which is then used for all subsequent
     calls from this module
+
     :return: True on successful authentication to keystone, False otherwise
     """
 
@@ -80,6 +82,7 @@ def connect_to_openstack():
     global _auth_token
     global _tenant_id
     global _token_cache_time
+    global _user_id
 
     # simple cache calculation
     # _token_cache_time will get updated when we refresh the token
@@ -121,11 +124,15 @@ def connect_to_openstack():
 
     try:
         _auth_token = ""
-        request = urllib2.Request("http://" + configuration.openstack_host + _auth_url)
+        request = urllib.request.Request("http://" + configuration.openstack_host + _auth_url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("Content-Length", len(_auth_json))
-        result = urllib2.urlopen(request, _auth_json)
+        result = urllib.request.urlopen(request, _auth_json)
+
+        result_json = json.loads(result.read())
+        _user_id = result_json.get('token', {}).get('user', {}).get('id', None)
+
         _auth_token = result.info().getheader('X-Subject-Token')
         # now get the tenant_id for the chosen project
         _tenant_id = get_project_id(configuration.openstack_project)
@@ -182,11 +189,11 @@ def get_project_auth_token(project):
         """ % (configuration.openstack_user, configuration.openstack_password, project)
 
     try:
-        request = urllib2.Request("http://" + configuration.openstack_host + _auth_url)
+        request = urllib.request.Request("http://" + configuration.openstack_host + _auth_url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("Content-Length", len(_auth_json))
-        result = urllib2.urlopen(request, _auth_json)
+        result = urllib.request.urlopen(request, _auth_json)
         _project_auth_token = result.info().getheader('X-Subject-Token')
         return _project_auth_token
 
@@ -199,13 +206,14 @@ def get_project_auth_token(project):
 def get_project_id(project_name):
     """
     Gets the UUID of the project by project_name
+
     :param project_name: Name of the Project
     :return: string UUID or None
     """
 
     logger.debug("--- get_project_id ---")
 
-    projects_url = create_os_url('/projects')
+    projects_url = create_os_url('/users/%s/projects' % _user_id)
     projects_string = do_get(projects_url)
     if projects_string is None:
         return None
@@ -264,7 +272,7 @@ def upload_image_to_glance_old(name, image_file_path):
         f = open(image_file_path, 'rb')
         fio = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
 
-        request = urllib2.Request(url, fio)
+        request = urllib.request.Request(url, fio)
         request.add_header("X-Auth-Token", _auth_token)
         request.add_header("Content-Type", "application/octet-stream")
         request.add_header("x-image-meta-name", name)
@@ -273,7 +281,7 @@ def upload_image_to_glance_old(name, image_file_path):
         request.add_header("x-image-meta-is_public", "true")
         request.add_header("x-image-meta-min_ram", "1024")
         request.add_header("x-image-meta-min_disk", "1")
-        result = urllib2.urlopen(request)
+        result = urllib.request.urlopen(request)
         return result.read()
     except Exception as e:
         logger.error("Could not upload image to glance")
@@ -319,11 +327,11 @@ def upload_image_to_glance(name, image_file_path):
             f = open(image_file_path, 'rb')
             fio = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
             upload_url = create_glance_url('/images/%s/file' % image_id)
-            request = urllib2.Request(upload_url, fio)
+            request = urllib.request.Request(upload_url, fio)
             request.add_header("Content-Type", "application/octet-stream")
             request.add_header("X-Auth-Token", _auth_token)
             request.get_method = lambda: 'PUT'
-            return urllib2.urlopen(request)
+            return urllib.request.urlopen(request)
         else:
             logger.error('Could not find an ID key in returned json from glance image create')
             logger.error(r_data)
@@ -490,6 +498,7 @@ def get_image_id_for_name(image_name):
 def get_stack_details(stack_name):
     """
     Returns python object representing Stack details
+
     :param stack_name: name of the stack to find
     :return: stack object or None if not found!
     """
@@ -498,6 +507,10 @@ def get_stack_details(stack_name):
     url = create_heat_url("/%s/stacks" % _tenant_id)
 
     stacks_list_string = do_get(url)
+    if stacks_list_string is None:
+        logger.info("No stacks were found!")
+        return None
+
     stacks_list = json.loads(stacks_list_string)
     for stack in stacks_list["stacks"]:
         if stack["stack_name"] == stack_name:
@@ -711,12 +724,12 @@ def get_nova_serial_console(instance_name):
 
     try:
         project_auth_token = get_project_auth_token(configuration.openstack_project)
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("X-Auth-Token", project_auth_token)
         request.get_method = lambda: 'POST'
-        result = urllib2.urlopen(request, data)
+        result = urllib.request.urlopen(request, data)
         console_json_data = json.loads(result.read())
         logger.debug(json.dumps(console_json_data, indent=2))
         return console_json_data["console"]["url"]
@@ -755,12 +768,12 @@ def do_get(url):
     :return: response from urllib2.urlopen(r).read() or None
     """
     try:
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("X-Auth-Token", _auth_token)
         request.get_method = lambda: 'GET'
-        result = urllib2.urlopen(request)
+        result = urllib.request.urlopen(request)
         return result.read()
     except Exception as e:
         logger.error("Could not perform GET to url: %s" % url)
@@ -776,12 +789,12 @@ def do_post(url, data):
     :return: string response from urllib2.urlopen(r,data).read() or None
     """
     try:
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("Content-Length", len(data))
         request.add_header("X-Auth-Token", _auth_token)
-        result = urllib2.urlopen(request, data)
+        result = urllib.request.urlopen(request, data)
         return result.read()
     except URLError as e:
         logger.error("Could not perform POST to url: %s" % url)
@@ -797,16 +810,16 @@ def do_put(url, data=""):
     :return: string response from urllib2.urlopen(r, data).read() or None
     """
     try:
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("X-Auth-Token", _auth_token)
         request.get_method = lambda: 'PUT'
 
         if data == "":
-            result = urllib2.urlopen(request)
+            result = urllib.request.urlopen(request)
         else:
-            result = urllib2.urlopen(request, data)
+            result = urllib.request.urlopen(request, data)
 
         return result.read()
     except URLError as e:
@@ -823,12 +836,12 @@ def do_nova_get(url):
     """
     try:
         project_auth_token = get_project_auth_token(configuration.openstack_project)
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("X-Auth-Token", project_auth_token)
         request.get_method = lambda: 'GET'
-        result = urllib2.urlopen(request)
+        result = urllib.request.urlopen(request)
         return result.read()
     except Exception as e:
         logger.error("Could not perform GET to url: %s" % url)
@@ -847,16 +860,16 @@ def do_nova_delete(url, project_name, data=""):
     logger.debug("--- connect_to_openstack ---")
     try:
         project_token = get_project_auth_token(project_name)
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("X-Auth-Token", project_token)
         request.get_method = lambda: 'DELETE'
 
         if data == "":
-            result = urllib2.urlopen(request)
+            result = urllib.request.urlopen(request)
         else:
-            result = urllib2.urlopen(request, data)
+            result = urllib.request.urlopen(request, data)
 
         return result.read()
     except URLError as e:
@@ -873,16 +886,16 @@ def do_delete(url, data=""):
     :return: string response from urllib2.urlopen(r, data).read() or None
     """
     try:
-        request = urllib2.Request(url)
+        request = urllib.request.Request(url)
         request.add_header("Content-Type", "application/json")
         request.add_header("charset", "UTF-8")
         request.add_header("X-Auth-Token", _auth_token)
         request.get_method = lambda: 'DELETE'
 
         if data == "":
-            result = urllib2.urlopen(request)
+            result = urllib.request.urlopen(request)
         else:
-            result = urllib2.urlopen(request, data)
+            result = urllib.request.urlopen(request, data)
 
         return result.read()
     except URLError as e:
