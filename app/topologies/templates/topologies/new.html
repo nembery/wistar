@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load staticfiles %}
+{% load static %}
 {% block scripts %}
 <script src="{% static 'js/jquery-ui.js' %}" type="text/javascript"></script>
 <!--  <script type="text/javascript" src="{% static 'js/jquery.layout.js' %}"></script> -->
@@ -46,6 +46,9 @@
 <script src="{% static 'js/vm_types/cloud.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/vm_types/panos.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/vm_types/panorama.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/vm_types/windows_10.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/vm_types/windows_server.js' %}" type="text/javascript"></script>
+
 <script src="{% static 'js/topologySelectionListener.js' %}" type="text/javascript"></script>
 
 <script src="{% static 'js/topology_utils.js' %}" type="text/javascript"></script>
@@ -83,6 +86,13 @@
     var allocated_ips = $.parseJSON('{{ allocated_ips|safe }}');
     var dhcp_reservations = $.parseJSON('{{ dhcp_reservations|safe }}');
 
+    function instanceDoubleClick() {
+        let figureId = $('#selectedObject').val();
+        let figure = canvas.getFigure(figureId);
+        figure.togglePortLocation();
+        console.log(figure);
+    }
+
     // check if an IP address is currently available
     function checkIp() {
         var ip = jQuery('#topoIconIp').val();
@@ -95,7 +105,8 @@
         var url = "/ajax/checkIp/";
 
         var params = {
-            'ip': ip
+            'ip': ip,
+            'csrfmiddlewaretoken': window.csrf_token
         };
 
         var success = function (response) {
@@ -679,7 +690,7 @@
 
                     <input id="submit_button" name="submit_button" onclick="saveTopology();"
                            type="button" value="Save"/>
-
+                    {% csrf_token %}
                 </td>
             </tr>
         </table>

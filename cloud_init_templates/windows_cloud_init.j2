@@ -1,0 +1,9 @@
+#cloud-config
+hostname: {{ config.hostname }}
+users:
+    - name: {{ config.ssh_user }}
+      primary_group: Users
+      passwd: {{ config.password }}
+      inactive: False
+      ssh-authorized-keys:
+        - {{ config.ssh_key }}

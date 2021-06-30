@@ -1,9 +1,9 @@
-{% load staticfiles %}
+{% load static %}
 
 <script type="text/javascript">
 
-    $(document).keyup(function(e){
-        if(e.keyCode === 27)
+    $(document).keyup(function (e) {
+        if (e.keyCode === 27)
             closeOverlay();
     });
 
@@ -15,7 +15,7 @@
         }
         var roles = s.getUserDataKey('roles');
 
-        if (! $.isArray(roles)) {
+        if (!$.isArray(roles)) {
             roles = [];
         }
         roles.push(r);
@@ -39,7 +39,7 @@
         closeOverlay();
     }
 
-    $(function() {
+    $(function () {
         console.log('loading instance details for ' + s.getName());
         $('#instanceName').val(s.getName());
         $('#instanceIp').val(s.getIp());
@@ -50,8 +50,7 @@
 
         let roles = s.getUserDataKey('roles');
         if ($.isArray(roles)) {
-            $.each(roles, function(i, r)
-            {
+            $.each(roles, function (i, r) {
                 $('#instanceRoles').append("<li>" + r + "</li>");
             });
         }
@@ -63,7 +62,7 @@
     <tr>
         <td colspan="4">
             <div class="screen-overlay-menu" style="fload: right">
-               <a href="#" onclick="javascript: closeOverlay()">X</a>
+                <a href="#" onclick="closeOverlay()">X</a>
             </div>
             <h2>
                 Instance Details
@@ -93,28 +92,28 @@
         </td>
         <td>
             {% if d.state != "running" %}
-            <div class="status_red" title="Power on instance in Hypervisor">
-            <a href="#" onclick="javascript: manageDomain('start', '{{ d.uuid }}', '{{ topologyId }}');">
-                &#9661;</a>
-            </div>
-            &nbsp;
+                <div class="status_red" title="Power on instance in Hypervisor">
+                    <a href="#" onclick="manageDomain('start', '{{ d.uuid }}', '{{ topologyId }}');">
+                        &#9661;</a>
+                </div>
+                &nbsp;
             {% else %}
-            <div class="status_green">
-            <a href="#" onclick="javascript: manageDomain('stop', '{{ d.uuid }}', '{{ topologyId }}');"
-               title="Power off instance in Hypervisor">
-                &#10003;</a>
-            </div>
-            &nbsp;
-            <div class="status_grey">
-            <a href="#" onclick="javascript: manageDomain('suspend', '{{ d.uuid }}', '{{ topologyId }}');"
-               title="Suspend instance in Hypervisor">
-                S</a>
-            </div>
-            &nbsp;
-            <a href="#" onclick="javascript: launchWebConsole('{{ d.name }}');"
-               title="Launch Console ({{ vnc_port|default:0000 }})">
-                <img src="{% static 'images/console.png' %}" width="20px" height="20px"/></a>
-            &nbsp;
+                <div class="status_green">
+                    <a href="#" onclick="manageDomain('stop', '{{ d.uuid }}', '{{ topologyId }}');"
+                       title="Power off instance in Hypervisor">
+                        &#10003;</a>
+                </div>
+                &nbsp;
+                <div class="status_grey">
+                    <a href="#" onclick="manageDomain('suspend', '{{ d.uuid }}', '{{ topologyId }}');"
+                       title="Suspend instance in Hypervisor">
+                        S</a>
+                </div>
+                &nbsp;
+                <a href="#" onclick="launchWebConsole('{{ d.name }}');"
+                   title="Launch Console ({{ vnc_port|default:0000 }})">
+                    <img src="{% static 'images/console.png' %}" width="20px" height="20px"/></a>
+                &nbsp;
             {% endif %}
         </td>
     </tr>
@@ -155,14 +154,14 @@
             Add Role:
             <input type="text" style="width: 75px;"
                    id="instanceNewRole"/>
-            <input type="button" onclick="javascript: addInstanceRole()" value="Add"/>
+            <input type="button" onclick="addInstanceRole()" value="Add"/>
             &nbsp;
-            <input type="button" onclick="javascript: clearInstanceRoles()" value="Clear"/>&nbsp;
+            <input type="button" onclick="clearInstanceRoles()" value="Clear"/>&nbsp;
         </td>
     </tr>
     <tr>
         <td colspan="2">
-            <input type="button" onclick="javascript: updateInstance()" value="Update"/>
+            <input type="button" onclick="updateInstance()" value="Update"/>
         </td>
     </tr>
 

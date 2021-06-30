@@ -630,7 +630,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                 bridge_name = external_bridges[target_uuid]
                 create_bridge = False
             elif source_uuid in list(external_bridges.keys()):
-                bridge_name = external_bridges[target_uuid]
+                bridge_name = external_bridges[source_uuid]
                 create_bridge = False
             else:
                 bridge_name = "t" + str(topology_id) + "_br" + str(conn_index)

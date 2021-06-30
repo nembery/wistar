@@ -32,8 +32,10 @@
 
         var url = '/ajax/refreshDeploymentStatus/';
         var params = {
-            'topologyId' : topoId
+            'topologyId' : topoId,
+            'csrfmiddlewaretoken': window.csrf_token
         };
+
         var post = jQuery.post(url, params, function(response) {
             var content = jQuery(response);
             jQuery('#deploymentStatus').empty().append(content);
@@ -51,7 +53,8 @@
 
         var url = '/ajax/refreshHostLoad/';
         var params = {
-            'dummy' : "111278" 
+            'dummy' : "111278",
+            'csrfmiddlewaretoken': window.csrf_token
         };
         var post = jQuery.post(url, params, function(response) {
             var content = jQuery(response);
@@ -93,7 +96,8 @@
         var params = {
             'topologyId' : topoId,
             'domainId' : domainId,
-            'action' : action
+            'action' : action,
+            'csrfmiddlewaretoken': window.csrf_token
         };
         var post = jQuery.post(url, params, function(response) {
             var content = jQuery(response);
@@ -115,7 +119,8 @@
         var params = {
             'topologyId' : topoId,
             'networkName' : networkName,
-            'action' : action
+            'action' : action,
+            'csrfmiddlewaretoken': window.csrf_token
         };
         var post = jQuery.post(url, params, function(response) {
             var content = jQuery(response);
@@ -139,7 +144,8 @@
  
         var url = '/ajax/getConfigTemplates/';
         var params = {
-            'topologyId' : topoId
+            'topologyId' : topoId,
+            'csrfmiddlewaretoken': window.csrf_token
         };
         var post = jQuery.post(url, params, function(response) {
             var content = jQuery(response);
@@ -163,7 +169,8 @@
 
         var url = '/ajax/getAvailableInstances/';
         var params = {
-            'scriptId' : scriptId
+            'scriptId' : scriptId,
+            'csrfmiddlewaretoken': window.csrf_token
         };
         var post = jQuery.post(url, params, function(response) {
             var content = jQuery(response);

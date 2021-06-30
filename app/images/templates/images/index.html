@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load staticfiles %}
+{% load static %}
 {% block content %}
 <div class="centered_box_75">
 
@@ -36,7 +36,7 @@
                     <li>
                         <a href="delete/{{ image.id }}">Delete</a>
                     </li>
-                    {% if global_config.deployment_backend = "kvm" %}
+                    {% if global_config.deployment_backend == "kvm" %}
                     <li>
                         <a href="{% static image.file %}">Download</a>
                     </li>

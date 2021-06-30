@@ -1,21 +1,3 @@
-#
-# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
-#
-# Copyright (c) 2015 Juniper Networks, Inc.
-# All rights reserved.
-#
-# Use is subject to license terms.
-#
-# Licensed under the Apache License, Version 2.0 (the ?License?); you may not
-# use this file except in compliance with the License. You may obtain a copy of
-# the License at http://www.apache.org/licenses/LICENSE-2.0.
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
 import json
 import logging
@@ -23,6 +5,8 @@ import mmap
 import time
 import urllib.request, urllib.error, urllib.parse
 from urllib.error import URLError
+import requests
+from requests import RequestException
 
 from wistar import configuration
 
@@ -124,16 +108,26 @@ def connect_to_openstack():
 
     try:
         _auth_token = ""
-        request = urllib.request.Request("http://" + configuration.openstack_host + _auth_url)
-        request.add_header("Content-Type", "application/json")
-        request.add_header("charset", "UTF-8")
-        request.add_header("Content-Length", len(_auth_json))
-        result = urllib.request.urlopen(request, _auth_json)
+        # request = urllib.request.Request("http://" + configuration.openstack_host + _auth_url)
+        # request.add_header("Content-Type", "application/json")
+        # request.add_header("charset", "UTF-8")
+        # request.add_header("Content-Length", len(_auth_json))
+        # result = urllib.request.urlopen(request, _auth_json)
 
-        result_json = json.loads(result.read())
+        url = "http://" + configuration.openstack_host + _auth_url
+        headers = {
+            'Content-Type': 'application/json',
+            'charset': 'UTF-8',
+            "Content-Length": str(len(_auth_json))
+        }
+        results = requests.post(url, data=_auth_json, headers=headers)
+
+        result_json = results.json()
+
         _user_id = result_json.get('token', {}).get('user', {}).get('id', None)
 
-        _auth_token = result.info().getheader('X-Subject-Token')
+        # _auth_token = result.info().getheader('X-Subject-Token')
+        _auth_token = results.headers['X-Subject-Token']
         # now get the tenant_id for the chosen project
         _tenant_id = get_project_id(configuration.openstack_project)
         # logger.debug(_auth_token)
@@ -690,6 +684,7 @@ def create_stack(stack_name, template_string):
 def get_nova_serial_console(instance_name):
     """
     Get the websocket URL for the serial proxy for a given nova server (instance)
+
     :param instance_name: name of the instance
     :return: websocket url ws://x.x.x.x:xxxx/token=xxxxx
     """
@@ -784,19 +779,23 @@ def do_get(url):
 def do_post(url, data):
     """
     Performs a simple REST POST
+
     :param url: full url to use for POST
     :param data: url encoded data
-    :return: string response from urllib2.urlopen(r,data).read() or None
+    :return: string response from results.text or None
     """
+
     try:
-        request = urllib.request.Request(url)
-        request.add_header("Content-Type", "application/json")
-        request.add_header("charset", "UTF-8")
-        request.add_header("Content-Length", len(data))
-        request.add_header("X-Auth-Token", _auth_token)
-        result = urllib.request.urlopen(request, data)
-        return result.read()
-    except URLError as e:
+        headers = {
+            'Content-Type': 'application/json',
+            'charset': 'UTF-8',
+            'Content-Length': str(len(data)),
+            'X-Auth-Token': _auth_token
+        }
+        results = requests.post(url, data=data, headers=headers)
+        return results.text
+
+    except RequestException as e:
         logger.error("Could not perform POST to url: %s" % url)
         logger.error("error was %s" % str(e))
         return None
@@ -805,24 +804,35 @@ def do_post(url, data):
 def do_put(url, data=""):
     """
     Performs a simple REST PUT
+
     :param url: full URL to use for PUT
     :param data: url encoded data
     :return: string response from urllib2.urlopen(r, data).read() or None
     """
     try:
-        request = urllib.request.Request(url)
-        request.add_header("Content-Type", "application/json")
-        request.add_header("charset", "UTF-8")
-        request.add_header("X-Auth-Token", _auth_token)
-        request.get_method = lambda: 'PUT'
+        headers = {
+            'Content-Type': 'application/json',
+            'charset': 'UTF-8',
+            'Content-Length': str(len(data)),
+            'X-Auth-Token': _auth_token
+        }
 
-        if data == "":
-            result = urllib.request.urlopen(request)
-        else:
-            result = urllib.request.urlopen(request, data)
+        response = requests.put(url, data)
+        return response.text
 
-        return result.read()
-    except URLError as e:
+        # request = urllib.request.Request(url)
+        # request.add_header("Content-Type", "application/json")
+        # request.add_header("charset", "UTF-8")
+        # request.add_header("X-Auth-Token", _auth_token)
+        # request.get_method = lambda: 'PUT'
+        #
+        # if data == "":
+        #     result = urllib.request.urlopen(request)
+        # else:
+        #     result = urllib.request.urlopen(request, data)
+        #
+        # return result.read()
+    except RequestException as e:
         logger.error("Could not perform PUT to url: %s" % url)
         logger.error("error was %s" % str(e))
         return None

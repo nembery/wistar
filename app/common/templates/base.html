@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +9,9 @@
     <script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
 
     <script type="text/javascript" src="{% static 'js/wistar_utils.js' %}"></script>
+    <script type="text/javascript">
+        window.csrf_token ='{{ csrf_token }}';
+    </script>
     {% block scripts %}{% endblock %}
 </head>
 <body>
@@ -75,7 +78,7 @@
                     <li>
                         <a href="/images/local">Define Local Image</a>
                     </li>
-                    {% if global_config.deployment_backend = "openstack" %}
+                    {% if global_config.deployment_backend == "openstack" %}
                     <li>
                         <a href='/images/glanceImages/' title="View and Import images from Glance">
                             Import from Glance

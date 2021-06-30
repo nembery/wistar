@@ -47,8 +47,6 @@ def index(request):
 def edit(request, image_id):
     image = get_object_or_404(Image, pk=image_id)
 
-    #     template = get_object_or_404(ConfigTemplate, pk=template_id)
-    # template_form = ConfigTemplateForm(instance=template)
     image_form = ImageForm(instance=image)
     return render(request, 'images/edit.html', {'image': image, 'image_form': image_form})
 
@@ -392,6 +390,7 @@ def import_from_glance(request, glance_id):
     Everything in Wistar depends on a db entry in the Images table
     If you have an existing openstack cluster, you may want to import those
     images here without having to physically copy the images to local disk
+
     :param request: HTTPRequest object
     :param glance_id: id of the glance image to import
     :return: redirect to /images/image_id

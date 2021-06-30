@@ -9,19 +9,14 @@ var topologySelectionListener = Class.extend({
             if (! isNewTopology()) {
 
                 if (figure instanceof draw2d.Connection) {
-                    console.log('found connection');
                     loadConnectionEditor(figure.getId());
 	            } else if (figure instanceof draw2d.shape.basic.Line) {
-	                console.log("found line");
 	                loadLineEditor(figure.getId());
 	            } else if (figure instanceof draw2d.shape.note.PostIt) {
-	                console.log("found note");
 	                loadPostItEditor(figure.getId());
 	            } else if (figure instanceof draw2d.shape.basic.Label) {
-	                console.log("found label");
 	                loadLabelEditor(figure.getId());
 	            } else if (figure instanceof draw2d.shape.node.wistarVm) {
-	                console.log("found wistarVm");
 	                if (figure.getType().match('junos')) {
 	                    loadJunosIconEditor(figure.getId());
 	                } else if(figure.getType().match('linux')) {
@@ -31,7 +26,6 @@ var topologySelectionListener = Class.extend({
 	                }
 	                // hideSelection();
 	            } else if (figure instanceof draw2d.shape.composite.Group) {
-	            	console.log("found composite group");
 	            	var assignedFigures = figure.getAssignedFigures();
 	            	assignedFigures.each(function(i, z) {
 	            		if (z instanceof draw2d.shape.node.wistarSetParent) {

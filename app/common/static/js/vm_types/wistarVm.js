@@ -285,6 +285,8 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         this.setName(memento.userData.name);
         this.setSecondaryDiskParams(memento.userData.secondaryDiskParams);
         this.setTertiaryDiskParams(memento.userData.tertiaryDiskParams);
+        console.log('setting userdata stuff');
+        this.PORT_POSITION = memento.userData.portPosition;
     },
     getPersistentAttributes: function () {
         // force grabbing the mgnt interface
@@ -314,13 +316,14 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         ud["configDriveSupport"] = this.CONFIG_DRIVE_SUPPORT;
         ud["configDriveParams"] = this.CONFIG_DRIVE_PARAMS;
         ud["configDriveParamsFile"] = this.CONFIG_DRIVE_PARAMS_FILE;
+        ud["portPosition"] = this.PORT_POSITION;
 
         return this._super();
     },
     // override default dc handler
     onDoubleClick: function () {
-        // launchWebConsole(generateDomainNameFromLabel(this.getName()));
-        loadInstanceDetails();
+        // this can be overridden per the page, new vs edit for example
+        instanceDoubleClick();
     },
     toFront: function () {
         return;

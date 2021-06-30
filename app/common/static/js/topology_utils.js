@@ -377,7 +377,8 @@ function loadInstanceDetails() {
 
     var url = '/ajax/instanceDetails/';
     var params = {
-        'domainName': domainName
+        'domainName': domainName,
+        'csrfmiddlewaretoken': window.csrf_token
     };
     let post = jQuery.post(url, params, function (response) {
         var content = jQuery(response);
