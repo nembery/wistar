@@ -576,7 +576,7 @@ def create_panos_cloud_init_b64(hostname, config):
 
     with open(tar_file, 'rb') as tfb:
         tar_contents = tfb.read()
-        return str(b64encode(tar_contents))
+        return str(b64encode(tar_contents).decode('utf-8'))
 
 
 def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, password, script="", script_param="",

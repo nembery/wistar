@@ -22,6 +22,12 @@ TopologyIconPortLocator = draw2d.layout.locator.PortLocator.extend({
         }
     }
 });
+
+// here to preserve existing topologies
+topologyIconPortLocator = TopologyIconPortLocator.extend({
+    NAME: "topologyIconPortLocator"
+})
+
 BottomCenterLocator = draw2d.layout.locator.Locator.extend({
     NAME: "BottomCenterLocator",
     init: function(parent)
@@ -36,6 +42,7 @@ BottomCenterLocator = draw2d.layout.locator.Locator.extend({
         target.setPosition(boundingBox.w / 2 - targetBoundingBox.w / 2, parent.getHeight());
     }
 });
+
 IpLabelLocator = draw2d.layout.locator.Locator.extend({
     NAME: "IpLabelLocator",
     init: function(parent)

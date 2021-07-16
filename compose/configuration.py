@@ -18,8 +18,7 @@
 #
 
 # some basic configuration parameters for wistar
-
-import vm_definitions
+from . import vm_definitions
 
 # What should we show as the title across all pages?
 # Useful to customize this if you have multiple wistar instances on different servers / clusters

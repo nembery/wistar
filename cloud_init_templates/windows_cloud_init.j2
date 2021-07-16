@@ -5,5 +5,9 @@ users:
       primary_group: Users
       passwd: {{ config.password }}
       inactive: False
-      ssh-authorized-keys:
-        - {{ config.ssh_key }}
+    - name: poc
+      primary_group: Users
+      passwd: poc123
+      inactive: False
+
+

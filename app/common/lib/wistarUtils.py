@@ -81,6 +81,7 @@ def _generate_mac(topology_id):
     use the topology id to generate 2 octets, and the number of
     macs used so far to generate the last two octets.
     Uses the locally administered address ranges 52:54:00 through 52:54:FF
+
     :param topology_id: string id of the topology we are building
     :return: mostly unique mac address that should be safe to deploy
     """
@@ -104,6 +105,7 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
     """
     Generates heat template from the topology configuration object
     use load_config_from_topology_json to get the configuration from the Topology
+
     :param config: configuration dict from load_config_from_topology_json
     :return: json encoded heat template as String
     """
@@ -306,11 +308,13 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
     for device in config["devices"]:
         index = 0
         for port in device["interfaces"]:
+            port_name = device["name"] + "_port" + str(index)
             pr = dict()
             pr["type"] = "OS::Neutron::Port"
             p = dict()
 
             if port["bridge"] == "virbr0":
+
                 p["network_id"] = configuration.openstack_mgmt_network
 
                 # specify our desired IP address on the management interface
@@ -330,7 +334,18 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
                     p['fixed_ips'].append({'ip_address': port['ip_address']})
 
             pr["properties"] = p
-            template["resources"][device["name"] + "_port" + str(index)] = pr
+            template["resources"][port_name] = pr
+
+            # check if floating_ip is requested and add here to the mgmt network
+            if device.get('floating_ip', False) and p["network_id"] == configuration.openstack_mgmt_network:
+                fi = dict()
+                fi["type"] = "OS::Neutron::FloatingIP"
+                fi["properties"] = dict()
+                fi["properties"]["floating_network_id"] = configuration.openstack_external_network
+                fi["properties"]["port_id"] = {"get_resource": port_name}
+
+                template["resources"][device["name"] + "_floating_ip"] = fi
+
             index += 1
 
     return json.dumps(template)
@@ -484,6 +499,9 @@ def load_config_from_topology_json(topology_json, topology_id):
             if 'roles' in user_data:
                 logger.debug('Found roles to use')
                 device['roles'] = user_data.get('roles', [])
+
+            # check for floating ip information
+            device['floating_ip'] = user_data.get('floating_ip', False)
 
             device["uuid"] = json_object.get('id', '')
             device["interfaces"] = []

@@ -22,10 +22,10 @@
             Authentication
         </td>
         <td>
-            <input id="topoIconUser" maxsize="15" name="topoIconUser" size="15"
+            <input id="topoIconUser" maxlength="15" name="topoIconUser" size="15"
                    style="width: 75px;" title="Username" type="text" value="root"/>
             &nbsp;
-            <input id="topoIconPass" maxsize="15" name="topoIconPass" onblur="checkPass(this.value);"
+            <input id="topoIconPass" maxlength="15" name="topoIconPass" onblur="checkPass(this.value);"
                    size="15" style="width: 75px;" title="Password"
                    type="text" value="{{ global_config.default_instance_password }}"/>
         </td>
@@ -130,7 +130,7 @@
         </td>
         <td>
             <div style="line-height: 1.5;">
-                <ul id="instanceRoles" style="list-style-type: square; margin-bottom: 10px;"></ul>
+                <ul id="instanceRoles" style="list-style-type: square;"></ul>
             </div>
             Add Role:
 {#            <input id="instanceNewRole" style="width: 75px;"#}
@@ -145,6 +145,14 @@
             &nbsp;
             <input onclick="clearNewInstanceRoles()" type="button" value="Clear"/>&nbsp;
             <input id="newInstanceRoles" type="hidden" value="[]"/>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Floating IP
+        </td>
+        <td>
+            <input type="checkbox" name="floating_ip" id="floating_ip" value="yes">Yes</input>
         </td>
     </tr>
     </tbody>

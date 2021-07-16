@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
     <title>{% block title %}{{ global_config.wistar_title }}{% endblock %}</title>
     <link href="{% static 'images/wistar.png' %}" rel="shortcut icon">
     <script type="text/javascript" src="{% static 'js/jquery-1.12.4.js' %}"></script>
@@ -10,7 +10,7 @@
 
     <script type="text/javascript" src="{% static 'js/wistar_utils.js' %}"></script>
     <script type="text/javascript">
-        window.csrf_token ='{{ csrf_token }}';
+        window.csrf_token = '{{ csrf_token }}';
     </script>
     {% block scripts %}{% endblock %}
 </head>
@@ -25,50 +25,57 @@
 </div>
 <div id="header_menu">
     <ul>
-            <li id="menu_topologies">
-                Topologies
-                &nbsp;
-                <ul class="header_submenu">
-                    <li>
-                        <a href="/topologies">View Topologies</a>
-                    </li>
-                    <li>
-                        <a href="/topologies/new">Create Topology</a>
-                    </li>
-                    <li>
-                        <a href="/topologies/import">Import Topology</a>
-                    </li>
-                </ul>
-                <script>
-                    jQuery("#menu_topologies").hover(
-                        function() {
-                            $(this).children('.header_submenu').slideDown(150);
-                        },
-                        function() {
-                            $(this).children('.header_submenu').slideUp(150);
-                        }
-                    );
-                </script>
-            </li>
-            {% if global_config.deployment_backend == "kvm" %}
+        <li id="menu_topologies">
+            Topologies
+            &nbsp;
+            <ul class="header_submenu">
+                <li>
+                    <a href="/topologies">View Topologies</a>
+                </li>
+                <li>
+                    <a href="/topologies/new">Create Topology</a>
+                </li>
+                <li>
+                    <a href="/topologies/import">Import Topology</a>
+                </li>
+            </ul>
+            <script>
+                $("#menu_topologies").hover(
+                    function () {
+                        $(this).children('.header_submenu').slideDown(150);
+                    },
+                    function () {
+                        $(this).children('.header_submenu').slideUp(150);
+                    }
+                );
+            </script>
+        </li>
+        {% if global_config.deployment_backend == "kvm" %}
             <li>
                 <a href="/ajax/manageHypervisor/">Manage Hypervisor</a>
             </li>
-            {% elif global_config.deployment_backend == "openstack" %}
+        {% elif global_config.deployment_backend == "openstack" %}
             <li>
                 <a href="#"
-                   onclick="javascript: window.open('{{ global_config.openstack_horizon_url }}/project/stacks')">
+                   onclick="window.open('{{ global_config.openstack_horizon_url }}/project/stacks')">
                     Manage Openstack
                 </a>
             </li>
-            {% endif %}
-            <li id="menu_images">
-                Images
-                &nbsp;
-                <ul class="header_submenu">
+        {% endif %}
+        <li id="menu_images">
+            Images
+            &nbsp;
+            <ul class="header_submenu">
+                <li>
+                    <a href="/images">View Images</a>
+                </li>
+                {% if global_config.deployment_backend == "openstack" %}
                     <li>
-                        <a href="/images">View Images</a>
+                        <a href='/images/glanceImages/' title="View and Import images from Glance">
+                            Import from Glance
+                        </a>
                     </li>
+                {% else %}
                     <li>
                         <a href="/images/new">Upload Image</a>
                     </li>
@@ -78,25 +85,19 @@
                     <li>
                         <a href="/images/local">Define Local Image</a>
                     </li>
-                    {% if global_config.deployment_backend == "openstack" %}
-                    <li>
-                        <a href='/images/glanceImages/' title="View and Import images from Glance">
-                            Import from Glance
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-                <script>
-                    jQuery("#menu_images").hover(
-                        function() {
-                            $(this).children('.header_submenu').slideDown(150);
-                        },
-                        function() {
-                            $(this).children('.header_submenu').slideUp(150);
-                        }
-                    );
-                </script>
-            </li>
+                {% endif %}
+            </ul>
+            <script>
+                $("#menu_images").hover(
+                    function () {
+                        $(this).children('.header_submenu').slideDown(150);
+                    },
+                    function () {
+                        $(this).children('.header_submenu').slideUp(150);
+                    }
+                );
+            </script>
+        </li>
     </ul>
 </div>
 <div id="content">

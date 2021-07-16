@@ -8,12 +8,13 @@
     });
 
     function addInstanceRole() {
-        var r = $('#instanceNewRole').val();
-        if (r == '') {
+        let instanceNewRole = $('#instanceNewRole');
+        let r = instanceNewRole.val();
+        if (r === '') {
             console.log('no role to set');
             return;
         }
-        var roles = s.getUserDataKey('roles');
+        let roles = s.getUserDataKey('roles');
 
         if (!$.isArray(roles)) {
             roles = [];
@@ -23,7 +24,7 @@
         s.setUserDataKey('roles', roles);
 
         $('#instanceRoles').append("<li>" + r + "</li>");
-        $('#instanceNewRole').val('');
+        instanceNewRole.val('');
     }
 
     function clearInstanceRoles() {
@@ -36,6 +37,7 @@
         s.setPassword($('#instancePass').val());
         s.setCpu($('#instanceCpu').val());
         s.setRam($('#instanceRam').val());
+        s.setUserDataKey('floating_ip', $('#floating_ip').prop('checked'));
         closeOverlay();
     }
 
@@ -47,6 +49,7 @@
         $('#instancePass').val(s.getPassword());
         $('#instanceCpu').val(s.getCpu());
         $('#instanceRam').val(s.getRam());
+        $('#floating_ip').prop('checked', s.getUserDataKeyWithDefault('floating_ip', false));
 
         let roles = s.getUserDataKey('roles');
         if ($.isArray(roles)) {
@@ -54,7 +57,6 @@
                 $('#instanceRoles').append("<li>" + r + "</li>");
             });
         }
-
     });
 </script>
 
@@ -74,7 +76,7 @@
             Name
         </td>
         <td>
-            <input type="text" disabled="true" name="instanceName" id="instanceName" value=""/>
+            <input type="text" disabled="disabled" name="instanceName" id="instanceName" value=""/>
         </td>
     </tr>
     <tr>
@@ -82,7 +84,7 @@
             IP Address
         </td>
         <td>
-            <input type="text" disabled="true" title="management address" name="instanceIp"
+            <input type="text" disabled="disabled" title="management address" name="instanceIp"
                    id="instanceIp" value=""/>
         </td>
     </tr>
@@ -149,7 +151,7 @@
         </td>
         <td>
             <div style="line-height: 1.5;">
-                <ul style="list-style-type: square; margin-bottom: 10px;" id="instanceRoles"></ul>
+                <ul style="list-style-type: square;" id="instanceRoles"></ul>
             </div>
             Add Role:
             <input type="text" style="width: 75px;"
@@ -160,9 +162,16 @@
         </td>
     </tr>
     <tr>
+        <td>
+            Floating IP
+        </td>
+        <td>
+            <input type="checkbox" name="floating_ip" id="floating_ip" value="yes">Yes</input>
+        </td>
+    </tr>
+    <tr>
         <td colspan="2">
             <input type="button" onclick="updateInstance()" value="Update"/>
         </td>
     </tr>
-
 </table>

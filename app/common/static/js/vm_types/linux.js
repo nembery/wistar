@@ -15,7 +15,7 @@ draw2d.shape.node.linux = draw2d.shape.node.wistarStandalone.extend({
     RESIZE_SUPPORT: true,
 
     getConfigScriptId: function() {
-        if (this.getUserData()["configScriptId"] != undefined) {
+        if (this.getUserData()["configScriptId"] !== undefined) {
             return this.getUserData()["configScriptId"];
         } else {
             return "0";
@@ -26,7 +26,7 @@ draw2d.shape.node.linux = draw2d.shape.node.wistarStandalone.extend({
         ud["configScriptId"] = id;
     },
     getConfigScriptParameter: function() {
-        if (this.getUserData()["configScriptParam"] != undefined) {
+        if (this.getUserData()["configScriptParam"] !== undefined) {
             return this.getUserData()["configScriptParam"];
         } else {
             return "";

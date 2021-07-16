@@ -323,7 +323,7 @@ def glance_detail(request):
     :param request: HTTPRequest
     :return: rendered HTML
     """
-    required_fields = set(['imageId'])
+    required_fields = {'imageId'}
     if not required_fields.issubset(request.POST):
         return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})
 
@@ -376,6 +376,10 @@ def list_glance_images(request):
 def upload_to_glance(request, image_id):
     if openstackUtils.connect_to_openstack():
         image = get_object_or_404(Image, pk=image_id)
+        if not image.filePath:
+            logger.info('Cannot upload Glance, no local path')
+            return HttpResponseRedirect('/images/%s' % image_id)
+
         logger.debug("Uploading now!")
         if osUtils.check_path(image.filePath.path):
             openstackUtils.upload_image_to_glance(image.name, image.filePath.path)

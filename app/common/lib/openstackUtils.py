@@ -482,6 +482,9 @@ def get_image_id_for_name(image_name):
     logger.debug("--- get_image_id_for_name ---")
 
     image_detail = get_glance_image_detail_by_name(image_name)
+    if not image_detail:
+        return None
+
     if 'name' in image_detail and image_detail['name'] == image_name:
         # all is well, return the id from here
         return image_detail.get('id', None)
