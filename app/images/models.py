@@ -32,7 +32,7 @@ class Image(models.Model):
     name = models.CharField(max_length=32)
     type = models.CharField(max_length=32, choices=type_choices, default='junos_vre')
     description = models.TextField()
-    filePath = models.FileField(upload_to='user_images')
+    filePath = models.FileField(upload_to='user_images', blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     

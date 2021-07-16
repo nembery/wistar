@@ -500,10 +500,7 @@ option {
 	padding: 0 3px;
 }
 input[type=checkbox] {
-	clear: left;
-	float: left;
-	margin: 0px 6px 7px 2px;
-	width: auto;
+    margin-right: 5px;
 }
 div.checkbox label {
 	display: inline;

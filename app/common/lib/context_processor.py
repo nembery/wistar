@@ -24,6 +24,6 @@ from wistar import configuration
 # custom request processor that adds the os load to every request
 def add_load(request):
     (one, five, ten) = os.getloadavg()
-    load = {'one': one, 'five': five, 'ten': ten}
+    load = {'one': round(one, 2), 'five': round(five, 2), 'ten': round(ten, 2)}
     return {'load': load, 'global_config': configuration}
 

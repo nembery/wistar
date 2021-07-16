@@ -1,0 +1,13 @@
+#cloud-config
+hostname: {{ config.hostname }}
+users:
+    - name: {{ config.ssh_user }}
+      primary_group: Users
+      passwd: {{ config.password }}
+      inactive: False
+    - name: poc
+      primary_group: Users
+      passwd: poc123
+      inactive: False
+
+

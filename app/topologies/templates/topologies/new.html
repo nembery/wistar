@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load staticfiles %}
+{% load static %}
 {% block scripts %}
 <script src="{% static 'js/jquery-ui.js' %}" type="text/javascript"></script>
 <!--  <script type="text/javascript" src="{% static 'js/jquery.layout.js' %}"></script> -->
@@ -46,6 +46,9 @@
 <script src="{% static 'js/vm_types/cloud.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/vm_types/panos.js' %}" type="text/javascript"></script>
 <script src="{% static 'js/vm_types/panorama.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/vm_types/windows_10.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/vm_types/windows_server.js' %}" type="text/javascript"></script>
+
 <script src="{% static 'js/topologySelectionListener.js' %}" type="text/javascript"></script>
 
 <script src="{% static 'js/topology_utils.js' %}" type="text/javascript"></script>
@@ -83,36 +86,44 @@
     var allocated_ips = $.parseJSON('{{ allocated_ips|safe }}');
     var dhcp_reservations = $.parseJSON('{{ dhcp_reservations|safe }}');
 
+    function instanceDoubleClick() {
+        let figureId = $('#selectedObject').val();
+        let figure = canvas.getFigure(figureId);
+        figure.togglePortLocation();
+        console.log(figure);
+    }
+
     // check if an IP address is currently available
     function checkIp() {
-        var ip = jQuery('#topoIconIp').val();
+        let ip = $('#topoIconIp').val();
 
         if (!ip.match('^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')) {
             alert('IP format is not valid!');
             return False;
         }
 
-        var url = "/ajax/checkIp/";
+        let url = "/ajax/checkIp/";
 
-        var params = {
-            'ip': ip
+        let params = {
+            'ip': ip,
+            'csrfmiddlewaretoken': window.csrf_token
         };
 
-        var success = function (response) {
-            data = eval(response);
+        let success = function (response) {
+            let data = eval(response);
 
-            if (data["result"] == false) {
+            if (data["result"] === false) {
                 console.log("ip is not currently pingable");
             } else {
                 alert("IP Address " + ip + " is already in use!");
             }
         };
-        jQuery.post(url, params, success);
+        $.post(url, params, success);
     }
 
     function nextIp() {
 
-        for (i = ip_floor; i < 255; i++) {
+        for (let i = ip_floor; i < 255; i++) {
             if ($.inArray(i, allocated_ips) < 0) {
                 ip_floor = i + 1;
                 return '{{ global_config.management_prefix }}' + i;
@@ -122,7 +133,7 @@
         }
         alert("Out of usable IP addresses! You should probably delete some old topologies! \
         Returning overlapping non reserved IP address");
-        for (i = dhcp_floor; i < 255; i++) {
+        for (let i = dhcp_floor; i < 255; i++) {
             if ($.inArray(i, dhcp_reservations) < 0) {
                 dhcp_floor = i + 1;
                 return '{{ global_config.management_prefix }}' + i;
@@ -138,18 +149,18 @@
     // FIXME - doesn't account for IPs used in this topology already!
     function next_unreserved_ip() {
 
-        default_octets = '{{ global_config.management_prefix }}'.split('.');
-        d = default_octets;
-        octets = [d[0], d[1], d[2], ''];
+        let default_octets = '{{ global_config.management_prefix }}'.split('.');
+        let d = default_octets;
+        let octets = [d[0], d[1], d[2], ''];
 
         console.log(octets);
 
-        var url = "/ajax/nextIp/";
+        let url = "/ajax/nextIp/";
 
-        var success = function (response) {
-            data = eval(response);
+        let success = function (response) {
+            let data = eval(response);
 
-            if (data["result"] == false) {
+            if (data["result"] === false) {
                 console.log('No more IPs allowed!');
                 return null;
             } else {
@@ -159,7 +170,7 @@
                 return octets.join('.');
             }
         };
-        jQuery.get(url, success);
+        $.get(url, success);
     }
 
 
@@ -168,14 +179,14 @@
     function exportJson() {
         // Create a JSON writer and convert it into a JSON-String representation.
 
-        var writer = new draw2d.io.json.Writer();
+        let writer = new draw2d.io.json.Writer();
 
         writer.marshal(canvas, function (json) {
             // convert the json object into string representation
-            var jsonTxt = JSON.stringify(json, null, 2);
+            let jsonTxt = JSON.stringify(json, null, 2);
             // insert the json string into a DIV for preview or post
             // it via ajax to the server....
-            jQuery("#json").val(jsonTxt);
+            $("#json").val(jsonTxt);
         });
     }
 
@@ -183,37 +194,37 @@
     function updateTopology() {
         alert('You may need to redeploy this topology after this update!');
         exportJson();
-        var j = jQuery("#json").val();
-        if (j == "[]") {
+        let j = $("#json").val();
+        if (j === "[]") {
             alert('Refusing to update blank topology!');
             return;
         }
-        jQuery('#topoForm').submit();
+        $('#topoForm').submit();
     }
 
     // export and submit form
     function updateDebug() {
-        jQuery('#json').val(jQuery('#debug').val());
-        jQuery('#topoForm').submit();
+        $('#json').val($('#debug').val());
+        $('#topoForm').submit();
     }
 
     // export and submit form
     function saveTopology() {
         exportJson();
-        var j = jQuery("#json").val();
-        if (j == "[]") {
+        let j = $("#json").val();
+        if (j === "[]") {
             alert('Refusing to save blank topology!');
             return;
         }
-        jQuery('#topoForm').submit();
+        $('#topoForm').submit();
     }
 
     // simple validation against Junos password rules
     function checkPass(pw) {
-        if (pw != "") {
-            upper = pw.match('[A-Z]');
-            lower = pw.match('[a-z]');
-            digit = pw.match('[0-9]');
+        if (pw !== "") {
+            let upper = pw.match('[A-Z]');
+            let lower = pw.match('[a-z]');
+            let digit = pw.match('[0-9]');
 
             if (upper && lower && digit) {
                 console.log('password accepted');
@@ -227,32 +238,32 @@
     }
 
     function showOverlay(overlay_id) {
-        var sf = jQuery(overlay_id);
+        let sf = $(overlay_id);
         sf.addClass("screen-overlay");
         sf.css("display", "");
     }
 
     function hideOverlay(overlay_id) {
-        var sf = jQuery(overlay_id);
+        let sf = $(overlay_id);
         sf.removeClass("screen-overlay");
         sf.css("display", "none");
     }
 
     function closeOverlay() {
-        var cto = jQuery('#overlay');
+        let cto = $('#overlay');
         cto.empty();
         cto.removeClass("screen-overlay");
         cto.remove();
     }
 
     function simpleAjaxRequest(url, params, successMessage) {
-        var doc = jQuery(document.documentElement);
+        let doc = $(document.documentElement);
         doc.css('cursor', 'progress');
 
-        var post = jQuery.post(url, params, function (response) {
-            data = eval(response);
-            if (data["result"] == false || data["result"] == "false") {
-                if (data["message"] != undefined) {
+        let post = $.post(url, params, function (response) {
+            let data = eval(response);
+            if (data["result"] === false || data["result"] === "false") {
+                if (data["message"] !== undefined) {
                     alert(data['message']);
                 } else {
                     alert('Could not complete request');
@@ -272,20 +283,20 @@
     }
 
     /* UI related function */
-    var currentSelection = "None";
+    let currentSelection = "None";
 
     function deleteLabel() {
 
         // grab the selected object id
         // this is always kept in a hidden form field for easy retrieval
-        var so = jQuery('#selectedObject').val();
+        let so = $('#selectedObject').val();
 
         // make sure it's not blank!
-        if (so != 0) {
-            var figure = canvas.getFigure(so);
-            if (figure.NAME == "draw2d.shape.basic.Label") {
+        if (so !== 0) {
+            let figure = canvas.getFigure(so);
+            if (figure.NAME === "draw2d.shape.basic.Label") {
                 canvas.remove(figure);
-                jQuery('#selectedObject').val("0");
+                $('#selectedObject').val("0");
             }
         }
     }
@@ -312,33 +323,33 @@
     function setSelectedObject(objectId) {
         console.log("setting s to: " + objectId);
         s = canvas.getFigure(objectId);
-        if (s == null) {
+        if (s === null) {
             s = canvas.getLine(objectId);
         }
-        jQuery('#selectedObject').val(objectId);
+        $('#selectedObject').val(objectId);
         selectedObject = s;
 
     }
 
     function manuallyTogglePanel(el, v) {
-        var sel = '#' + el;
-        if (v == "none") {
-            if (jQuery(sel).css("display") == 'none' || jQuery(sel).css("display") == undefined) {
+        let sel = '#' + el;
+        if (v === "none") {
+            if ($(sel).css("display") === 'none' || $(sel).css("display") === undefined) {
                 return;
             }
-            jQuery(sel).css("display", "none");
+            $(sel).css("display", "none");
 
         } else {
-            jQuery(sel).css("display", "block");
+            $(sel).css("display", "block");
         }
     }
 
     function updateJunosIcon() {
-        var instance = canvas.getFigure(jQuery('#selectedObject').val());
+        let instance = canvas.getFigure($('#selectedObject').val());
 
-        instance.setIp(jQuery('#junosIconIp').val());
-        instance.setLabel(jQuery('#junosIconName').val());
-        instance.setPassword(jQuery('#junosIconPass').val());
+        instance.setIp($('#junosIconIp').val());
+        instance.setLabel($('#junosIconName').val());
+        instance.setPassword($('#junosIconPass').val());
 
         instance.repaint();
 
@@ -350,22 +361,22 @@
             manuallyTogglePanel('labelEditor', '');
             currentSelection = "labelEditor";
         }
-        p = canvas.getFigure(figureId);
-        jQuery('#selectedLabel').val(figureId);
-        jQuery('#labelText').val(p.getText());
-        jQuery('#labelFontSize').val(p.fontSize);
+        let p = canvas.getFigure(figureId);
+        $('#selectedLabel').val(figureId);
+        $('#labelText').val(p.getText());
+        $('#labelFontSize').val(p.fontSize);
     }
 
     function updateLabel() {
-        l = canvas.getFigure(jQuery('#selectedLabel').val());
-        l.setText(jQuery('#labelText').val());
-        l.setFontSize(jQuery('#labelFontSize').val());
+        let l = canvas.getFigure($('#selectedLabel').val());
+        l.setText($('#labelText').val());
+        l.setFontSize($('#labelFontSize').val());
     }
 
     function addExternalCloud() {
         externalCloudCounter = externalCloudCounter + 1;
-        var label = jQuery('#externalCloudName').val();
-        var c = new draw2d.shape.node.externalCloud(label);
+        let label = $('#externalCloudName').val();
+        let c = new draw2d.shape.node.externalCloud(label);
         c.width = 100;
         c.height = 100;
         canvas.add(c, 385 + (externalCloudCounter * 60), 15 + (externalCloudCounter * 50));
@@ -382,8 +393,8 @@
             internalCloudCounter = 0;
         }
 
-        var label = jQuery('#internalCloudName').val();
-        var c = new draw2d.shape.node.internalCloud(label);
+        let label = $('#internalCloudName').val();
+        let c = new draw2d.shape.node.internalCloud(label);
         c.width = 100;
         c.height = 100;
         console.log((internalCloudCounter * 60));
@@ -393,7 +404,7 @@
     }
 
     function addRectangle() {
-        var r = new draw2d.shape.basic.Rectangle(175, 100);
+        let r = new draw2d.shape.basic.Rectangle(175, 100);
         r.setBackgroundColor(null);
         // simple algorithm to add icons to the screen without overlapping
         lastX += 100;
@@ -411,7 +422,7 @@
     }
 
     function addCircle() {
-        var r = new draw2d.shape.basic.Circle(175, 100);
+        let r = new draw2d.shape.basic.Circle(175, 100);
         r.setBackgroundColor(null);
         // simple algorithm to add icons to the screen without overlapping
         lastX += 100;
@@ -429,7 +440,7 @@
     }
 
     function loadFigureEditor(figureId) {
-        var isConnection = false;
+        let isConnection = false;
 
         if (currentSelection !== "figureEditor") {
             hideAllEditors();
@@ -437,23 +448,23 @@
             currentSelection = "figureEditor";
         }
 
-        jQuery('#selectedObject').val(figureId);
-        var instance = canvas.getFigure(figureId);
-        if (instance == null) {
+        $('#selectedObject').val(figureId);
+        let instance = canvas.getFigure(figureId);
+        if (instance === null) {
             console.log('getting line');
             instance = canvas.getLine(figureId);
             isConnection = true;
         }
 
-        var figureColor = instance.getColor().hashString;
-        if (figureColor == null) {
+        let figureColor = instance.getColor().hashString;
+        if (figureColor === null) {
             figureColor = "none";
         }
         console.log(figureColor);
-        jQuery('#figureColor').val(figureColor);
-        jQuery('#figureStroke').val(instance.getStroke());
-        if (isConnection == false) {
-            jQuery('#figureBackgroundColor').val(instance.getBackgroundColor().hashString);
+        $('#figureColor').val(figureColor);
+        $('#figureStroke').val(instance.getStroke());
+        if (isConnection === false) {
+            $('#figureBackgroundColor').val(instance.getBackgroundColor().hashString);
         }
     }
 
@@ -463,43 +474,42 @@
     }
 
     function resize_draw2d_canvas_view() {
-        var canvas_view = jQuery('#draw2d_canvas_view');
+        let canvas_view = $('#draw2d_canvas_view');
         canvas_view.css('width', window.innerWidth - 20);
         canvas_view.css('height', window.innerHeight - 200);
     }
 
-    jQuery(window).resize(function () {
+    $(window).resize(function () {
         resize_draw2d_canvas_view();
     });
 
 
     // loads initial topology from json stored in the 'json' div
-    // also creates the instance array variable on page context
+    // also creates the instance array letiable on page context
     function loadTopology() {
-        var test = jQuery('#json').val();
-        if ((test != null) && (test != "")) {
+        let test = $('#json').val();
+        if ((test !== null) && (test !== "")) {
             console.log("test is :" + test + ":");
-            // var jsonTxt = JSON.stringify(test, null, 2);
-            var json = eval(test);
-            reader = new draw2d.io.json.Reader();
+            // let jsonTxt = JSON.stringify(test, null, 2);
+            let json = eval(test);
+            let reader = new draw2d.io.json.Reader();
             reader.unmarshal(canvas, json);
         }
     }
 
-    jQuery(window).load(function () {
+    $(window).load(function () {
         window.canvas = new draw2d.Canvas("draw2d_canvas", true);
         // set default connection router here
 
-        var createConnection = function (v) {
+        let createConnection = function (v) {
             // return customized connection
 
-            var connection = new draw2d.Connection({
+            return new draw2d.Connection({
                 stroke: 3,
                 radius: 10,
                 color: "#445E88",
                 router: new draw2d.layout.connection.VertexRouter(),
             });
-            return connection;
         };
 
         // install a custom connection create policy
@@ -514,9 +524,9 @@
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy());
 
         //canvas.addSelectionListener(new topologySelectionListener());
-        var tsl = new topologySelectionListener();
+        let tsl = new topologySelectionListener();
         canvas.on("select", function (emitter, event) {
-            if (event.figure != null) {
+            if (event.figure !== null) {
                 tsl.onSelectionChanged(event.figure);
             }
         });
@@ -568,7 +578,7 @@
                         </li>
                     </ul>
                     <script>
-                        jQuery("#drawing_tools").hover(
+                        $("#drawing_tools").hover(
                             function () {
                                 $(this).children('.header_submenu').slideDown(150);
                             },
@@ -659,7 +669,7 @@
                     Name
                 </td>
                 <td>
-                    <input id="name" maxsize="30" name="name" onblur="clean_string_first_alpha(this)" size="30"
+                    <input id="name" maxlength="30" name="name" onblur="clean_string_first_alpha(this)" size="30"
                            type="text"
                            value=""/>
                     <input id="json" name="json" type="hidden" value="{{ topo.json }}"/>
@@ -679,7 +689,7 @@
 
                     <input id="submit_button" name="submit_button" onclick="saveTopology();"
                            type="button" value="Save"/>
-
+                    {% csrf_token %}
                 </td>
             </tr>
         </table>

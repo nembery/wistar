@@ -1,68 +1,74 @@
 function setImageType() {
-    id = jQuery('#topoIconImageSelect').val().split(':')[0];
-    type = jQuery('#topoIconImageSelect').val().split(':')[1];
+    let topoIconImageSelect = $('#topoIconImageSelect');
+    let id = topoIconImageSelect.val().split(':')[0];
+    type = topoIconImageSelect.val().split(':')[1];
     console.log("Setting image to " + id + " and type to " + type);
-    jQuery('#topoIconType').val(type);
-    jQuery('#topoIconImage').val(id);
-
+    $('#topoIconType').val(type);
+    $('#topoIconImage').val(id);
+    
+    let addInstanceTbodyCloudInit = $('#addInstanceTbodyCloudInit');
+    let addInstanceTbodyResize = $('#addInstanceTbodyResize');
+    let addInstanceTbodyVFPC = $('#addInstanceTbodyVFPC');
+    let addInstanceTbodySecondaryDisk = $('#addInstanceTbodySecondaryDisk'); 
     // by default, let's hide some things
-    jQuery('#addInstanceTbodyCloudInit').css("display", "none");
-    jQuery('#addInstanceTbodyResize').css("display", "none");
-    jQuery('#addInstanceTbodyVFPC').css("display", "none");
-    jQuery('#addInstanceTbodySecondaryDisk').css("display", "none");
+    addInstanceTbodyCloudInit.css("display", "none");
+    addInstanceTbodyResize.css("display", "none");
+    addInstanceTbodyVFPC.css("display", "none");
+    addInstanceTbodySecondaryDisk.css("display", "none");
 
     // let's also zero out a couple of optional params
-    jQuery('#topoIconScriptSelect').val('default_cloud_init.j2');
-    jQuery('#topoIconScriptParam').val(0);
-    jQuery('#topoIconResize').val(0);
+    $('#topoIconScriptSelect').val('default_cloud_init.j2');
+    $('#topoIconScriptParam').val(0);
+    $('#topoIconResize').val(0);
     $('#newInstanceRoles').val('[]');
     $('#instanceNewRole').val('');
     $('#instanceRoles').empty();
+    $('#floating_ip').prop('checked', false);
 
-    for (v = 0; v < vm_types.length; v++) {
-        vm_type = vm_types[v];
-        if (vm_type.name == type) {
+    for (let v = 0; v < vm_types.length; v++) {
+        let vm_type = vm_types[v];
+        if (vm_type.name === type) {
 
-            var icon = eval("new " + vm_type.js + "()");
+            let icon = eval("new " + vm_type.js + "()");
 
             console.log(icon);
 
-            jQuery('#topoIconCpu').val(icon.VCPU);
-            jQuery('#topoIconRam').val(icon.VRAM);
+            $('#topoIconCpu').val(icon.VCPU);
+            $('#topoIconRam').val(icon.VRAM);
 
             // FIXME - we may actually never have a need for 'image' selectable types again!
             // just generate the disks images we need!
-            if (icon.getSecondaryDiskParams() != "") {
-                var params = icon.getSecondaryDiskParams();
+            if (icon.getSecondaryDiskParams() !== "") {
+                let params = icon.getSecondaryDiskParams();
                 type = params["type"];
-                if (type == "image") {
-                    filter = params["filter"];
-                    jQuery('#addInstanceTbodySecondaryDisk').css("display", "");
+                if (type === "image") {
+                    let filter = params["filter"];
+                    addInstanceTbodySecondaryDisk.css("display", "");
                     filterCompanionSelect(filter, "topoIconSecondaryDisk");
                 }
             }
 
-            if (icon.getTertiaryDiskParams() != "") {
-                var params = icon.getTertiaryDiskParams();
-                var type = params["type"];
-                if (type == "image") {
-                    filter = params["filter"];
-                    jQuery('#addInstanceTbodyTertiaryDisk').css("display", "");
+            if (icon.getTertiaryDiskParams() !== "") {
+                let params = icon.getTertiaryDiskParams();
+                let type = params["type"];
+                if (type === "image") {
+                    let filter = params["filter"];
+                    $('#addInstanceTbodyTertiaryDisk').css("display", "");
                     filterCompanionSelect(filter, "topoIconTertiaryDisk");
                 }
             }
 
             if (typeof icon.setChildId != "undefined") {
-                jQuery('#addInstanceTbodyVFPC').css("display", "");
+                addInstanceTbodyVFPC.css("display", "");
                 filterCompanionSelect(icon.COMPANION_NAME_FILTER, "topoIconImageVFPCSelect");
             }
 
             if (icon.CLOUD_INIT_SUPPORT) {
-                jQuery('#addInstanceTbodyCloudInit').css("display", "");
+                addInstanceTbodyCloudInit.css("display", "");
             }
 
             if (icon.RESIZE_SUPPORT) {
-                jQuery('#addInstanceTbodyResize').css("display", "");
+                addInstanceTbodyResize.css("display", "");
             }
         }
     }
@@ -87,59 +93,62 @@ function addIconAndClose() {
 
 // add icon to the topology with the indicated values
 function addIcon() {
-    var ip = nextIp();
+    let ip = nextIp();
 
-    if (ip == null) {
+    if (ip === null) {
         return;
     }
 
-    var user = jQuery('#topoIconUser').val();
-    var pw = jQuery('#topoIconPass').val();
-    var name = jQuery('#topoIconName').val();
-    var type = jQuery('#topoIconType').val();
-    var image = jQuery('#topoIconImage').val();
-    var cpu = jQuery('#topoIconCpu').val();
-    var ram = jQuery('#topoIconRam').val();
-    //var iconData = jQuery('#topoIconIcon').val();
+    let topoIconName = $('#topoIconName');
+    let user = $('#topoIconUser').val();
+    let pw = $('#topoIconPass').val();
+    let name = topoIconName.val();
+    let type = $('#topoIconType').val();
+    let image = $('#topoIconImage').val();
+    let cpu = $('#topoIconCpu').val();
+    let ram = $('#topoIconRam').val();
+    //let iconData = $('#topoIconIcon').val();
 
     if (image === 0) {
         alert('Please select a valid image');
         return false;
     }
 
-    var scriptId = jQuery('#topoIconScriptSelect').val();
+    let scriptId = $('#topoIconScriptSelect').val();
     if (scriptId === null) {
         scriptId = '';
     }
-    var scriptParam = jQuery('#topoIconScriptParam').val();
+    let scriptParam = $('#topoIconScriptParam').val();
     let roles = $('#newInstanceRoles').val();
 
-    var resize = jQuery('#topoIconResize').val();
+    let floating_ip = $('#floating_ip').prop('checked');
 
-    var vpfe_image = jQuery('#topoIconImageVFPCSelect').val();
+    let resize = $('#topoIconResize').val();
+
+    let vpfe_image = $('#topoIconImageVFPCSelect').val();
 
     // enforce names always end with a digit
     // 11-23-19 - remove this!
-    // var last = name.substr(-1);
-    // var lastInt = parseInt(last);
+    // let last = name.substr(-1);
+    // let lastInt = parseInt(last);
     // if (isNaN(lastInt)) {
     //     alert('Name must end in a digit');
-    //     jQuery('#topoIconName').val(name + "1");
-    //     jQuery('#topoIconName').focus();
+    //     $('#topoIconName').val(name + "1");
+    //     $('#topoIconName').focus();
     //     return false;
     // }
 
-    if (name == "") {
+    if (name === "") {
         alert("Please add a valid instance name");
         return false;
     }
 
-    var icon;
+    let icon;
 
-    vm_type_data = {};
+    let vm_type_data = {};
     for (v = 0; v < vm_types.length; v++) {
-        vm_type = vm_types[v];
-        if (vm_type.name == type) {
+        let vm_type = vm_types[v];
+        if (vm_type.name === type) {
             vm_type_data = vm_type;
             break;
         }
@@ -149,9 +158,9 @@ function addIcon() {
     icon = eval("new " + vm_type_data.js + "()");
 
     // Should the user have selected a companion image?
-    if (icon.getCompanionType() != "") {
+    if (icon.getCompanionType() !== "") {
         // yes, did they?
-        if (vpfe_image == 0) {
+        if (vpfe_image === 0) {
             // uh-oh!
             alert('Please select a Companion Image before continuing!');
             return false;
@@ -179,8 +188,10 @@ function addIcon() {
     // set the resize value in userData dict
     icon.setUserDataKey('resize', resize);
 
+    icon.setUserDataKey('floating_ip', floating_ip);
+
     // set the scriptId in the
-    if (scriptId != 0) {
+    if (scriptId !== 0) {
         icon.setUserDataKey('configScriptId', scriptId);
         icon.setUserDataKey('configScriptParam', scriptParam);
     }
@@ -192,31 +203,31 @@ function addIcon() {
         $('#instanceRoles').empty();
     }
 
-    if (icon.getSecondaryDiskParams() != "") {
-        var params = icon.getSecondaryDiskParams();
-        var type = params["type"];
-        if (type == "image") {
-            params["image_id"] = jQuery('#topoIconSecondaryDisk').val();
+    if (icon.getSecondaryDiskParams() !== "") {
+        let params = icon.getSecondaryDiskParams();
+        let type = params["type"];
+        if (type === "image") {
+            params["image_id"] = $('#topoIconSecondaryDisk').val();
             icon.setSecondaryDiskParams(params);
         }
     }
 
-    if (icon.getCompanionType() != "") {
+    if (icon.getCompanionType() !== "") {
 
-        var vpfe_cpu = jQuery('#topoIconVFPCCpu').val();
-        var vpfe_ram = jQuery('#topoIconVFPCRam').val();
-        var vpfe_js = jQuery('#topoIconVFPCJs').val();
-        var vpfe_type = jQuery('#topoIconVFPCType').val();
+        let vpfe_cpu = $('#topoIconVFPCCpu').val();
+        let vpfe_ram = $('#topoIconVFPCRam').val();
+        let vpfe_js = $('#topoIconVFPCJs').val();
+        let vpfe_type = $('#topoIconVFPCType').val();
 
         // attempt to load vpfe as the selected image_id type
         // otherwise, use the default companion_type
-        if (vpfe_js == '') {
+        if (vpfe_js === '') {
             vpfe_js = icon.COMPANION_TYPE;
         }
 
-        var vpfe = eval("new " + vpfe_js + "()");
+        let vpfe = eval("new " + vpfe_js + "()");
 
-        vpfe_ip = nextIp();
+        let vpfe_ip = nextIp();
 
         vpfe.setup(vpfe_type, name, vpfe_ip, user, pw, vpfe_image);
 
@@ -238,8 +249,8 @@ function addIcon() {
 
         canvas.add(icon, lastX, lastY);
 
-        figures = new draw2d.util.ArrayList([icon, vpfe]);
-        var cg = new draw2d.command.CommandGroup(canvas, figures);
+        let figures = new draw2d.util.ArrayList([icon, vpfe]);
+        let cg = new draw2d.command.CommandGroup(canvas, figures);
         cg.execute();
 
         // work around, ports are being drawn as hidden until they are clicked!
@@ -250,7 +261,7 @@ function addIcon() {
     }
 
     // let's try to increment everything nicely
-    jQuery('#topoIconName').val(incrementIconName(name));
+    topoIconName.val(incrementIconName(name));
 
     return true;
 }
@@ -262,16 +273,16 @@ var dhcp_floor = ip_floor;
 // convenience func to increment icon name if it happens to end
 // in a digit
 function incrementIconName(name) {
-    var last = name.substr(-1);
-    var lastInt = parseInt(last);
+    let last = name.substr(-1);
+    let lastInt = parseInt(last);
 
     if (isNaN(lastInt)) {
         return name + '-01';
     }
 
-    if (last == "9") {
-        var lastTwo = name.substr(-2);
-        var lastTwoInt = parseInt(lastTwo);
+    if (last === "9") {
+        let lastTwo = name.substr(-2);
+        let lastTwoInt = parseInt(lastTwo);
         if (!isNaN(lastTwoInt)) {
             return name.substring(0, name.length - 2) + (lastTwoInt + 1);
         } else {
@@ -293,9 +304,9 @@ function incrementIconName(name) {
 
 function addLabel() {
 
-    var label = jQuery('#newLabel').val();
-    var labelSize = jQuery('#newLabelFontSize').val();
-    var l = new draw2d.shape.basic.Label({text: label});
+    let label = $('#newLabel').val();
+    let labelSize = $('#newLabelFontSize').val();
+    let l = new draw2d.shape.basic.Label({text: label});
     // l.setBackgroundColor();
     l.setFontColor("#000000");
     l.setFontSize(labelSize);
@@ -317,13 +328,13 @@ function addLabel() {
 }
 
 function filterCompanionSelect(filter_string, select_name) {
-    var filter_regex = RegExp(filter_string, 'i');
-    var companion_select = jQuery('#' + select_name);
+    let filter_regex = RegExp(filter_string, 'i');
+    let companion_select = $('#' + select_name);
     companion_select.empty();
     companion_select.append('<option value="0">None</option>');
     for (index in images) {
-        var image_name = images[index]["fields"]["name"];
-        var image_id = images[index]["pk"];
+        let image_name = images[index]["fields"]["name"];
+        let image_id = images[index]["pk"];
         if (image_name.match(filter_regex)) {
             companion_select.append('<option value="' + image_id + '">' + image_name + '</option>');
         }
@@ -331,30 +342,30 @@ function filterCompanionSelect(filter_string, select_name) {
 }
 
 function setCompanionParams(o) {
-    var companion_image = jQuery('#topoIconImageVFPCSelect').val();
+    let companion_image = $('#topoIconImageVFPCSelect').val();
     console.log(companion_image);
-    var companion_type = "blank";
+    let companion_type = "blank";
     for (i = 0; i < images.length; i++) {
 
-        if (images[i]["pk"] == companion_image) {
+        if (images[i]["pk"] === companion_image) {
             companion_type = images[i]["fields"]["type"];
             console.log(companion_type);
             break;
         }
     }
     // set the companion type here to be used later
-    jQuery('#topoIconVFPCType').val(companion_type);
+    $('#topoIconVFPCType').val(companion_type);
 
-    for (v = 0; v < vm_types.length; v++) {
-        vm_type = vm_types[v];
+    for (let v = 0; v < vm_types.length; v++) {
+        let vm_type = vm_types[v];
         console.log(vm_type.name);
-        if (vm_type.name == companion_type) {
+        if (vm_type.name === companion_type) {
             console.log('found it');
-            var companion = eval("new " + vm_type.js + "()");
+            let companion = eval("new " + vm_type.js + "()");
 
-            jQuery('#topoIconVFPCCpu').val(companion.VCPU);
-            jQuery('#topoIconVFPCRam').val(companion.VRAM);
-            jQuery('#topoIconVFPCJs').val(companion.NAME);
+            $('#topoIconVFPCCpu').val(companion.VCPU);
+            $('#topoIconVFPCRam').val(companion.VRAM);
+            $('#topoIconVFPCJs').val(companion.NAME);
 
             break;
         }
@@ -363,24 +374,25 @@ function setCompanionParams(o) {
 
 function loadInstanceDetails() {
 
-    var doc = jQuery(document);
+    let doc = $(document);
     doc.css('cursor', 'progress');
 
-    var figureId = jQuery('#selectedObject').val();
-    var figure = canvas.getFigure(figureId);
+    let figureId = $('#selectedObject').val();
+    let figure = canvas.getFigure(figureId);
 
-    var domainName = generateDomainNameFromLabel(figure.getLabel());
+    let domainName = generateDomainNameFromLabel(figure.getLabel());
 
-    var cso = jQuery('<div/>').attr("id", "overlay").addClass("screen-overlay");
+    let cso = $('<div/>').attr("id", "overlay").addClass("screen-overlay");
 
-    jQuery('#content').append(cso);
+    $('#content').append(cso);
 
-    var url = '/ajax/instanceDetails/';
-    var params = {
-        'domainName': domainName
+    let url = '/ajax/instanceDetails/';
+    let params = {
+        'domainName': domainName,
+        'csrfmiddlewaretoken': window.csrf_token
     };
-    let post = jQuery.post(url, params, function (response) {
-        var content = jQuery(response);
+    let post = $.post(url, params, function (response) {
+        let content = $(response);
         cso.append(content);
     });
     post.fail(function () {
@@ -419,14 +431,14 @@ function clearNewInstanceRoles() {
 }
 
     function addInstanceForm() {
-        var doc = jQuery(document.documentElement);
+        let doc = $(document.documentElement);
         doc.css('cursor', 'progress');
 
-        var url = '/topologies/addInstanceForm/';
+        let url = '/topologies/addInstanceForm/';
 
-        var post = jQuery.get(url, function (response) {
-            var content = jQuery(response);
-            jQuery('#overlayPanel').empty().append(content);
+        let post = $.get(url, function (response) {
+            let content = $(response);
+            $('#overlayPanel').empty().append(content);
             showOverlay('#overlayPanel');
         });
         post.fail(function () {

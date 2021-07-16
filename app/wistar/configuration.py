@@ -19,7 +19,7 @@
 
 # some basic configuration parameters for wistar
 
-import vm_definitions
+from . import vm_definitions
 
 # What should we show as the title across all pages?
 # Useful to customize this if you have multiple wistar instances on different servers / clusters
@@ -28,7 +28,7 @@ wistar_title = 'Wistar - Virtual Lab Environment'
 # shortcut to fill in default instance password in 'New VM' screen
 # Make sure this meets the complexity requirements for your VMs!
 # i.e. for junos you need 3 of these 4: upper / lower / special / number
-default_instance_password = 'Clouds123'
+default_instance_password = 'Wistar123'
 
 # user that will be configured via cloud-init - override this to your username if desired!
 ssh_user = "wistar"

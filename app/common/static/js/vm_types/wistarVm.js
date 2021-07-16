@@ -118,7 +118,7 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         this.setLabel(label);
     },
     getUserData: function () {
-        if (this.userData != undefined) {
+        if (this.userData !== undefined) {
             return this.userData;
         } else {
             this.userData = {};
@@ -126,45 +126,41 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         }
     },
     setUserDataKey: function (k, v) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud[k] = v;
     },
     getUserDataKey: function (k) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         return ud[k];
     },
-    getType: function () {
-        if (this.getUserData()["type"] != undefined) {
-            return this.getUserData()["type"];
+
+    getUserDataKeyWithDefault: function(k, d) {
+        let r = this.getUserDataKey(k);
+        if (r !== undefined) {
+            return r;
         } else {
-            return "linux";
+            return d;
         }
     },
+    getType: function () {
+        return this.getUserDataKeyWithDefault('type', 'linux');
+    },
     setType: function (type) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["type"] = type;
     },
     getCpu: function () {
-        if (this.getUserData()["cpu"] != undefined) {
-            return this.getUserData()["cpu"];
-        } else {
-            return this.VCPU;
-        }
+        return this.getUserDataKeyWithDefault('cpu', this.VCPU);
     },
     setCpu: function (cpu) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["cpu"] = cpu;
     },
     getRam: function () {
-        if (this.getUserData()["ram"] != undefined) {
-            return this.getUserData()["ram"];
-        } else {
-            // return magic number 2 - all older version of wistar defaulted to 2048MB RAM
-            return this.VRAM;
-        }
+        return this.getUserDataKeyWithDefault('ram', this.VRAM);
     },
     setRam: function (ram) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["ram"] = ram;
     },
     getSecondaryDiskParams: function () {
@@ -181,7 +177,7 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
     },
     getMgmtInterface: function () {
         // can we declare this now?
-        if (this.MANAGEMENT_INTERFACE_INDEX == 0) {
+        if (this.MANAGEMENT_INTERFACE_INDEX === 0) {
             return this.MANAGEMENT_INTERFACE_PREFIX + "0";
         } else {
             // only an icon that extends 'standalone' can set this properly
@@ -191,69 +187,45 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         }
     },
     getUser: function () {
-        if (this.getUserData()["user"] != undefined) {
-            return this.getUserData()["user"];
-        } else {
-            return this.DEFAULT_USER;
-        }
+        return this.getUserDataKeyWithDefault('user', this.DEFAULT_USER);
     },
     setUser: function (user) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["user"] = user;
     },
     getPassword: function () {
-        if (this.getUserData()["password"] != undefined) {
-            return this.getUserData()["password"];
-        } else {
-            return "NA";
-        }
+        return this.getUserDataKeyWithDefault('password', "NA");
     },
     setPassword: function (pw) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["password"] = pw;
     },
     getImage: function () {
-        if (this.getUserData()["image"] != undefined) {
-            return this.getUserData()["image"];
-        } else {
-            return "0";
-        }
+        return this.getUserDataKeyWithDefault('image', "0");
     },
     setImage: function (im) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["image"] = im;
     },
     setIp: function (ip) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["ip"] = ip;
     },
     getIp: function () {
-        if (this.getUserData()["ip"] != undefined) {
-            return this.getUserData()["ip"];
-        } else {
-            return "";
-        }
+        return this.getUserDataKeyWithDefault('ip', "");
     },
     getName: function () {
-        if (this.getUserData()["name"] != undefined) {
-            return this.getUserData()["name"];
-        } else {
-            return "unnamed_vm";
-        }
+        return this.getUserDataKeyWithDefault('name', "unnamed-vm");
     },
     setName: function (name) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["name"] = name;
     },
     getLabel: function () {
-        if (this.getUserData()["name"] != undefined) {
-            return this.getUserData()["name"];
-        } else {
-            return "unnamed_vm";
-        }
+        return this.getUserDataKeyWithDefault('name', "unnamed-vm");
     },
     setLabel: function (label) {
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["label"] = label;
     },
     getCompanionType: function () {
@@ -267,7 +239,7 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
     },
     // allow override in case of instance specific items required in string
     getSmBiosProductString: function () {
-        var instance_name = this.getName().replace("-", "_");
+        let instance_name = this.getName().replace("_", "-");
         return this.SMBIOS_PRODUCT_STRING_PREFIX + instance_name + this.SMBIOS_PRODUCT_STRING_SUFFIX;
     },
 
@@ -285,10 +257,11 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         this.setName(memento.userData.name);
         this.setSecondaryDiskParams(memento.userData.secondaryDiskParams);
         this.setTertiaryDiskParams(memento.userData.tertiaryDiskParams);
+        this.PORT_POSITION = memento.userData.portPosition;
     },
     getPersistentAttributes: function () {
         // force grabbing the mgnt interface
-        var ud = this.getUserData();
+        let ud = this.getUserData();
         ud["mgmtInterface"] = this.getMgmtInterface();
         ud["wistarVm"] = true;
         ud["cpu"] = this.getCpu();
@@ -314,25 +287,22 @@ draw2d.shape.node.wistarVm = draw2d.shape.basic.Image.extend({
         ud["configDriveSupport"] = this.CONFIG_DRIVE_SUPPORT;
         ud["configDriveParams"] = this.CONFIG_DRIVE_PARAMS;
         ud["configDriveParamsFile"] = this.CONFIG_DRIVE_PARAMS_FILE;
+        ud["portPosition"] = this.PORT_POSITION;
 
         return this._super();
     },
     // override default dc handler
     onDoubleClick: function () {
-        // launchWebConsole(generateDomainNameFromLabel(this.getName()));
-        loadInstanceDetails();
+        // this can be overridden per the page, new vs edit for example
+        instanceDoubleClick();
     },
     toFront: function () {
-        return;
+
     },
     toBack: function () {
-        return;
+
     },
     isAutoConfigured: function () {
-        if (this.CONFIG_DRIVE_SUPPORT || this.CLOUD_INIT_SUPPORT) {
-            return true;
-        } else {
-            return false;
-        }
+        return this.CONFIG_DRIVE_SUPPORT || this.CLOUD_INIT_SUPPORT;
     },
 });

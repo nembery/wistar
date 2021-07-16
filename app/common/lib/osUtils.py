@@ -451,7 +451,7 @@ def get_cloud_init_config(domain_name, host_name, mgmt_ip, mgmt_interface, passw
 
     # allow extra config params from the configuration file
     if hasattr(configuration, 'cloud_init_params') and type(configuration.cloud_init_params) is dict:
-        for k, v in configuration.cloud_init_params.items():
+        for k, v in list(configuration.cloud_init_params.items()):
             config[k] = v
 
     # do not allow 'root' user as the default ssh_user as this causes Junos configuration errors
@@ -576,7 +576,7 @@ def create_panos_cloud_init_b64(hostname, config):
 
     with open(tar_file, 'rb') as tfb:
         tar_contents = tfb.read()
-        return str(b64encode(tar_contents))
+        return str(b64encode(tar_contents).decode('utf-8'))
 
 
 def create_cloud_init_img(domain_name, host_name, mgmt_ip, mgmt_interface, password, script="", script_param="",

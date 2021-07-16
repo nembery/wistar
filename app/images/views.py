@@ -47,8 +47,6 @@ def index(request):
 def edit(request, image_id):
     image = get_object_or_404(Image, pk=image_id)
 
-    #     template = get_object_or_404(ConfigTemplate, pk=template_id)
-    # template_form = ConfigTemplateForm(instance=template)
     image_form = ImageForm(instance=image)
     return render(request, 'images/edit.html', {'image': image, 'image_form': image_form})
 
@@ -325,7 +323,7 @@ def glance_detail(request):
     :param request: HTTPRequest
     :return: rendered HTML
     """
-    required_fields = set(['imageId'])
+    required_fields = {'imageId'}
     if not required_fields.issubset(request.POST):
         return render(request, 'ajax/ajaxError.html', {'error': "Invalid Parameters in POST"})
 
@@ -378,6 +376,10 @@ def list_glance_images(request):
 def upload_to_glance(request, image_id):
     if openstackUtils.connect_to_openstack():
         image = get_object_or_404(Image, pk=image_id)
+        if not image.filePath:
+            logger.info('Cannot upload Glance, no local path')
+            return HttpResponseRedirect('/images/%s' % image_id)
+
         logger.debug("Uploading now!")
         if osUtils.check_path(image.filePath.path):
             openstackUtils.upload_image_to_glance(image.name, image.filePath.path)
@@ -392,6 +394,7 @@ def import_from_glance(request, glance_id):
     Everything in Wistar depends on a db entry in the Images table
     If you have an existing openstack cluster, you may want to import those
     images here without having to physically copy the images to local disk
+
     :param request: HTTPRequest object
     :param glance_id: id of the glance image to import
     :return: redirect to /images/image_id

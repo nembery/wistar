@@ -30,11 +30,11 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from passlib.hash import md5_crypt
 
-import imageUtils
-import libvirtUtils
-import openstackUtils
-import osUtils
-from exceptions import WistarException
+from . import imageUtils
+from . import libvirtUtils
+from . import openstackUtils
+from . import osUtils
+from .exceptions import WistarException
 from images.models import Image
 from topologies.models import Topology
 from wistar import configuration
@@ -81,6 +81,7 @@ def _generate_mac(topology_id):
     use the topology id to generate 2 octets, and the number of
     macs used so far to generate the last two octets.
     Uses the locally administered address ranges 52:54:00 through 52:54:FF
+
     :param topology_id: string id of the topology we are building
     :return: mostly unique mac address that should be safe to deploy
     """
@@ -104,6 +105,7 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
     """
     Generates heat template from the topology configuration object
     use load_config_from_topology_json to get the configuration from the Topology
+
     :param config: configuration dict from load_config_from_topology_json
     :return: json encoded heat template as String
     """
@@ -221,7 +223,7 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
                 context['host_name'] = device["name"]
                 context['md5_password'] = md5_crypt.hash(device['password'])
                 # pull in all the extra cloud-init-params
-                for k, v in configuration.cloud_init_params.items():
+                for k, v in list(configuration.cloud_init_params.items()):
                     context[k] = v
 
                 encoded_config_drive = osUtils.create_panos_cloud_init_b64(device['name'], context)
@@ -312,11 +314,13 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
     for device in config["devices"]:
         index = 0
         for port in device["interfaces"]:
+            port_name = device["name"] + "_port" + str(index)
             pr = dict()
             pr["type"] = "OS::Neutron::Port"
             p = dict()
 
             if port["bridge"] == "virbr0":
+
                 p["network_id"] = configuration.openstack_mgmt_network
 
                 # specify our desired IP address on the management interface
@@ -336,7 +340,18 @@ def get_heat_json_from_topology_config(config, project_name='admin'):
                     p['fixed_ips'].append({'ip_address': port['ip_address']})
 
             pr["properties"] = p
-            template["resources"][device["name"] + "_port" + str(index)] = pr
+            template["resources"][port_name] = pr
+
+            # check if floating_ip is requested and add here to the mgmt network
+            if device.get('floating_ip', False) and p["network_id"] == configuration.openstack_mgmt_network:
+                fi = dict()
+                fi["type"] = "OS::Neutron::FloatingIP"
+                fi["properties"] = dict()
+                fi["properties"]["floating_network_id"] = configuration.openstack_external_network
+                fi["properties"]["port_id"] = {"get_resource": port_name}
+
+                template["resources"][device["name"] + "_floating_ip"] = fi
+
             index += 1
 
     return json.dumps(template)
@@ -491,6 +506,9 @@ def load_config_from_topology_json(topology_json, topology_id):
                 logger.debug('Found roles to use')
                 device['roles'] = user_data.get('roles', [])
 
+            # check for floating ip information
+            device['floating_ip'] = user_data.get('floating_ip', False)
+
             device["uuid"] = json_object.get('id', '')
             device["interfaces"] = []
 
@@ -581,7 +599,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                 # we do have management interfaces first, so let's go ahead and add them to the device
                 # THIS ASSUMES THE JSON CONFIGURATION IS VALID! I.E. all interface indexes are accounted for
                 # 0, 1, 2, 3 etc.
-                interfaces = device_interface_wiring.keys()
+                interfaces = list(device_interface_wiring.keys())
                 interfaces.sort()
 
                 for interface in interfaces:
@@ -632,11 +650,11 @@ def load_config_from_topology_json(topology_json, topology_id):
                 bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(target_uuid))
             elif source_uuid in internal_bridges:
                 bridge_name = "t" + str(topology_id) + "_p_br" + str(internal_bridges.index(source_uuid))
-            elif target_uuid in external_bridges.keys():
+            elif target_uuid in list(external_bridges.keys()):
                 bridge_name = external_bridges[target_uuid]
                 create_bridge = False
-            elif source_uuid in external_bridges.keys():
-                bridge_name = external_bridges[target_uuid]
+            elif source_uuid in list(external_bridges.keys()):
+                bridge_name = external_bridges[source_uuid]
                 create_bridge = False
             else:
                 bridge_name = "t" + str(topology_id) + "_br" + str(conn_index)
@@ -674,7 +692,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                     # essentially same of create_bridge flag, but kept on the interface for later use in heat template
                     interface["bridge_preexists"] = False
                     interface['ip_address'] = source_ip
-                    if target_uuid in external_bridges.keys():
+                    if target_uuid in list(external_bridges.keys()):
                         # do not create external bridges...
                         create_bridge = False
                         interface["bridge_preexists"] = True
@@ -708,7 +726,7 @@ def load_config_from_topology_json(topology_json, topology_id):
                     interface["bridge_preexists"] = False
                     interface["ip_address"] = target_ip
 
-                    if source_uuid in external_bridges.keys():
+                    if source_uuid in list(external_bridges.keys()):
                         create_bridge = False
                         # keep bridge existence information on the interface for use in heat template
                         interface["bridge_preexists"] = True
@@ -812,7 +830,7 @@ def __get_cidr_for_bridge(bridge_name, network_cidrs):
     :param networks:
     :return:
     """
-    for name, detail_dict in network_cidrs.items():
+    for name, detail_dict in list(network_cidrs.items()):
         if bridge_name == name:
             if 'cidr' in detail_dict:
                 cidr = detail_dict['cidr']
@@ -825,7 +843,7 @@ def __get_bridge_cidr_details(bridge_name, network_cidrs):
     cidr_details = dict()
 
     # ensure we have this bridge captured in the network_cidrs dict
-    for name, details in network_cidrs.items():
+    for name, details in list(network_cidrs.items()):
         if bridge_name == name:
             cidr_details = details
             break
@@ -881,7 +899,7 @@ def __get_new_cidr(networks):
     private_network = netaddr.IPNetwork(private_cidr)
     logger.debug('checking networks')
     logger.debug(networks)
-    if networks is None or len(networks.keys()) == 0:
+    if networks is None or len(list(networks.keys())) == 0:
         # return list(private_network.subnet(private_subnet))[0]
         next_cidr = next(private_network.subnet(private_subnet))
         logger.debug('returning first %s' % next_cidr)
@@ -889,7 +907,7 @@ def __get_new_cidr(networks):
 
     for s in private_network.subnet(private_subnet):
         found = False
-        for c in networks.values():
+        for c in list(networks.values()):
             logger.debug('checking c %s' % c)
             if 'cidr' in c:
                 cidr = c['cidr']

@@ -21,6 +21,8 @@ from django.conf.urls import url
 
 from api import views
 
+app_name = 'api'
+
 urlpatterns = [
     url(r'^getTopologyStatus/$', views.get_topology_status, name='get_topology_status'),
     url(r'^startTopology/$', views.start_topology, name='start_topology'),

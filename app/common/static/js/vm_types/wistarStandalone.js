@@ -1,15 +1,33 @@
-topologyIconPortLocator = draw2d.layout.locator.PortLocator.extend({
-    NAME: "topologyIconPortLocator",
+TopologyIconPortLocator = draw2d.layout.locator.PortLocator.extend({
+    NAME: "TopologyIconPortLocator",
+
     init: function() {
         this._super();
     },
     relocate: function(index, figure) {
-        var node = figure.getParent();
-        var x = node.getWidth() / 2;
-        var y = node.getHeight() / 2;
-        this.applyConsiderRotation(figure, x, y);
+        let node = figure.getParent();
+
+        if(node.PORT_POSITION === 'bottom') {
+            let x = node.getWidth() / 2;
+            let y = node.getHeight() - 10;
+            this.applyConsiderRotation(figure, x, y);
+        } else if(node.PORT_POSITION === 'top') {
+            let x = node.getWidth() / 2;
+            let y = 10;
+            this.applyConsiderRotation(figure, x, y);
+        } else {
+            let x = node.getWidth() / 2;
+            let y = node.getHeight() / 2;
+            this.applyConsiderRotation(figure, x, y);
+        }
     }
 });
+
+// here to preserve existing topologies
+topologyIconPortLocator = TopologyIconPortLocator.extend({
+    NAME: "topologyIconPortLocator"
+})
+
 BottomCenterLocator = draw2d.layout.locator.Locator.extend({
     NAME: "BottomCenterLocator",
     init: function(parent)
@@ -24,6 +42,7 @@ BottomCenterLocator = draw2d.layout.locator.Locator.extend({
         target.setPosition(boundingBox.w / 2 - targetBoundingBox.w / 2, parent.getHeight());
     }
 });
+
 IpLabelLocator = draw2d.layout.locator.Locator.extend({
     NAME: "IpLabelLocator",
     init: function(parent)
@@ -68,10 +87,11 @@ wistarLabel = draw2d.shape.basic.Label.extend({
 // should not be instantiated directly, but rely on child classes
 draw2d.shape.node.wistarStandalone = draw2d.shape.node.wistarVm.extend({
     NAME: "draw2d.shape.node.wistarStandalone",
+    PORT_POSITION: "center",
 
     init: function() {
 	    this._super();
-    	var tpl = new topologyIconPortLocator();
+    	var tpl = new TopologyIconPortLocator();
     	this.createPort("hybrid", tpl);
         this.setBootState("none");
         var p = this.getPorts().first();
@@ -112,7 +132,7 @@ draw2d.shape.node.wistarStandalone = draw2d.shape.node.wistarVm.extend({
     },
     setLabel: function(label) {
         this.setName(label);
-        if (this.label == undefined) {
+        if (this.label === undefined) {
     	    this.label = new wistarLabel({ text: label });
             this.label.setColor("#0d0d0d");
             this.label.setFontColor("#0d0d0d");
@@ -129,7 +149,7 @@ draw2d.shape.node.wistarStandalone = draw2d.shape.node.wistarVm.extend({
     	this._super(memento);
     },
     getMgmtInterface: function() {
-        if (this.MANAGEMENT_INTERFACE_INDEX == 0) {
+        if (this.MANAGEMENT_INTERFACE_INDEX === 0) {
             return this.MANAGEMENT_INTERFACE_PREFIX + "0";
         } else {
             // FIXME this may need to be adjusted if there is ever a reason to have a management interface
@@ -140,4 +160,23 @@ draw2d.shape.node.wistarStandalone = draw2d.shape.node.wistarVm.extend({
             return this.MANAGEMENT_INTERFACE_PREFIX + connections.size;
         }
     },
+
+    togglePortLocation: function() {
+
+        let positions = ['center', 'bottom', 'top'];
+        let current_position = positions.indexOf(this.PORT_POSITION);
+
+        if (current_position < 0) {
+            current_position = 0;
+        }
+
+        let new_position = current_position + 1;
+        if (new_position >= positions.length) {
+            new_position = 0;
+        }
+
+        this.PORT_POSITION = positions[new_position];
+        this.portRelayoutRequired = true;
+        this.repaint();
+    }
 });

@@ -1,22 +1,3 @@
-#
-# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
-#
-# Copyright (c) 2015 Juniper Networks, Inc.
-# All rights reserved.
-#
-# Use is subject to license terms.
-#
-# Licensed under the Apache License, Version 2.0 (the ?License?); you may not
-# use this file except in compliance with the License. You may obtain a copy of
-# the License at http://www.apache.org/licenses/LICENSE-2.0.
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
 import json
 import logging
 import os
@@ -26,7 +7,8 @@ import traceback
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
 
@@ -70,7 +52,7 @@ def instance_details(request):
             return render(request, 'ajax/instanceDetails.html', {'d': {}, 'vnc_port': 6000})
 
     except Exception as e:
-        print e
+        print(e)
         return render(request, 'ajax/ajaxError.html', {'error': e})
 
 
@@ -241,7 +223,6 @@ def get_linux_startup_state(request):
                 response_data["console"] = consoleUtils.is_linux_device_at_prompt(name)
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")
-
 
 
 def get_config_templates(request):
@@ -915,7 +896,7 @@ def launch_web_console(request):
     else:
         logger.debug("nope")
         # start the ws ports at 6900
-        wc_port = len(wc_dict.keys()) + 6900
+        wc_port = len(list(wc_dict.keys())) + 6900
 
         logger.debug("using wsPort of " + str(wc_port))
         # get the domain from the hypervisor
@@ -974,7 +955,6 @@ def get_topology_config(request):
     except Exception as ex:
         logger.debug(ex)
         return render(request, 'ajax/ajaxError.html', {'error': "Topology not found!"})
-
 
 
 # query libvirt for all instances that are currently running

@@ -19,8 +19,12 @@
 
 import logging
 
-import libvirt
-from lxml import etree
+HAS_LIBVIRT = True
+try:
+    import libvirt
+    from lxml import etree
+except ModuleNotFoundError:
+    HAS_LIBVIRT = False
 
 from wistar import configuration
 
@@ -38,6 +42,11 @@ def connect():
     """
     global is_init
     global conn
+    global HAS_LIBVIRT
+
+    if not HAS_LIBVIRT:
+        return False
+
     if is_init is True:
         return True
     else:
@@ -553,7 +562,7 @@ def get_next_domain_vnc_port(offset=0):
         logger.debug("returning max+1+offset: " + str(next_port))
         return next_port
     else:
-        print "No vnc ports currently in use"
+        print("No vnc ports currently in use")
         # return int(5900) + offset
         return configuration.vnc_start_port + offset
 

@@ -20,7 +20,7 @@ def return_json(status, message, **kwargs):
     return_val["status"] = status
     return_val["message"] = message
 
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         return_val[k] = v
 
     return HttpResponse(json.dumps(return_val), content_type="application/json")
